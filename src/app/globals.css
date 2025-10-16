@@ -1,0 +1,832 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+
+  .premium {
+    --background: 222.2 84% 2%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 3%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 3%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 188 100% 50%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 8%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 8%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 188 100% 50%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 12%;
+    --input: 217.2 32.6% 12%;
+    --ring: 188 100% 50%;
+  }
+
+  .premium-hud {
+    --background: 0 0% 0%;
+    --foreground: 210 40% 98%;
+    --card: 0 0% 5%;
+    --card-foreground: 210 40% 98%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 30 100% 60%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 200 100% 60%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 30 100% 60%;
+  }
+
+  .premium-datagrid {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 6%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 6%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 0 0% 100%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Premium Theme Styles */
+.premium {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #0f172a 50%, #1e293b 75%, #0f172a 100%);
+  background-size: 400% 400%;
+  animation: premiumGradient 15s ease infinite;
+}
+
+@keyframes premiumGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.premium .card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  box-shadow: 
+    0 0 20px rgba(6, 182, 212, 0.1),
+    inset 0 1px 0 rgba(6, 182, 212, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.premium .card:hover {
+  border-color: rgba(6, 182, 212, 0.5);
+  box-shadow: 
+    0 0 30px rgba(6, 182, 212, 0.2),
+    inset 0 1px 0 rgba(6, 182, 212, 0.2);
+}
+
+.premium .btn-primary {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  border: 1px solid #06b6d4;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.premium .btn-primary:hover {
+  background: linear-gradient(135deg, #0891b2, #0e7490);
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
+}
+
+.premium .input {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #f8fafc;
+}
+
+.premium .input:focus {
+  border-color: #06b6d4;
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+}
+
+.premium .sidebar {
+  background: rgba(15, 23, 42, 0.9);
+  border-right: 1px solid rgba(6, 182, 212, 0.2);
+  backdrop-filter: blur(15px);
+}
+
+.premium .sidebar-item {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.premium .sidebar-item:hover {
+  background: rgba(6, 182, 212, 0.1);
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+}
+
+.premium .sidebar-item.active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.2));
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+}
+
+/* Glowing text effect */
+.premium .text-glow {
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+/* Animated border effect */
+.premium .border-glow {
+  position: relative;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.8)) padding-box,
+              linear-gradient(135deg, #06b6d4, #0891b2, #06b6d4) border-box;
+  background-size: 200% 200%;
+  animation: borderGlow 3s ease infinite;
+}
+
+@keyframes borderGlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Data visualization effects */
+.premium .chart-container {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.premium .chart-line {
+  stroke: #06b6d4;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.5));
+}
+
+.premium .chart-bar {
+  fill: url(#premiumGradient);
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.4));
+}
+
+/* Table effects */
+.premium .table-row:hover {
+  background: rgba(6, 182, 212, 0.05);
+  box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.1);
+}
+
+/* Badge effects */
+.premium .badge {
+  background: rgba(6, 182, 212, 0.2);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  color: #06b6d4;
+  text-shadow: 0 0 5px rgba(6, 182, 212, 0.5);
+}
+
+/* Premium HUD Theme Styles */
+.premium-hud {
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(30, 100% 60%, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(200, 100% 60%, 0.1) 0%, transparent 50%),
+    linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #000000 50%, #0a0a0a 75%, #000000 100%);
+  background-size: 100% 100%, 100% 100%, 400% 400%;
+  animation: hudGradient 20s ease infinite;
+  position: relative;
+}
+
+.premium-hud::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(30, 100% 60%, 0.03) 2px,
+      rgba(30, 100% 60%, 0.03) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(200, 100% 60%, 0.03) 2px,
+      rgba(200, 100% 60%, 0.03) 4px
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes hudGradient {
+  0% { background-position: 0% 50%, 0% 50%, 0% 50%; }
+  50% { background-position: 100% 50%, 100% 50%, 100% 50%; }
+  100% { background-position: 0% 50%, 0% 50%, 0% 50%; }
+}
+
+.premium-hud .card {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(30, 100% 60%, 0.4);
+  box-shadow: 
+    0 0 30px rgba(30, 100% 60%, 0.2),
+    inset 0 1px 0 rgba(200, 100% 60%, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-hud .card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(30, 100% 60%, 0.1), transparent);
+  animation: cardScan 3s ease-in-out infinite;
+}
+
+@keyframes cardScan {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+.premium-hud .card:hover {
+  border-color: rgba(30, 100% 60%, 0.6);
+  box-shadow: 
+    0 0 50px rgba(30, 100% 60%, 0.3),
+    inset 0 1px 0 rgba(200, 100% 60%, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.7);
+}
+
+.premium-hud .btn-primary {
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  border: 1px solid #ff6b35;
+  box-shadow: 
+    0 0 25px rgba(255, 107, 53, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-hud .btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: buttonScan 2s ease-in-out infinite;
+}
+
+@keyframes buttonScan {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+.premium-hud .btn-primary:hover {
+  background: linear-gradient(135deg, #f7931e, #ff6b35);
+  box-shadow: 
+    0 0 35px rgba(255, 107, 53, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.premium-hud .input {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(30, 100% 60%, 0.4);
+  color: #ffffff;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.premium-hud .input:focus {
+  border-color: #ff6b35;
+  box-shadow: 
+    0 0 20px rgba(255, 107, 53, 0.3),
+    inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.premium-hud .sidebar {
+  background: rgba(0, 0, 0, 0.9);
+  border-right: 1px solid rgba(30, 100% 60%, 0.3);
+  backdrop-filter: blur(20px);
+  position: relative;
+}
+
+.premium-hud .sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, rgba(30, 100% 60%, 0.5), transparent);
+  animation: sidebarGlow 2s ease-in-out infinite;
+}
+
+@keyframes sidebarGlow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.premium-hud .sidebar-item {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-hud .sidebar-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(200, 100% 60%, 0.1), transparent);
+  transition: left 0.3s ease;
+}
+
+.premium-hud .sidebar-item:hover::before {
+  left: 100%;
+}
+
+.premium-hud .sidebar-item:hover {
+  background: rgba(30, 100% 60%, 0.1);
+  box-shadow: 
+    0 0 20px rgba(30, 100% 60%, 0.2),
+    inset 0 0 20px rgba(200, 100% 60%, 0.05);
+}
+
+.premium-hud .sidebar-item.active {
+  background: linear-gradient(135deg, rgba(30, 100% 60%, 0.2), rgba(200, 100% 60%, 0.1));
+  border: 1px solid rgba(30, 100% 60%, 0.5);
+  box-shadow: 
+    0 0 30px rgba(30, 100% 60%, 0.3),
+    inset 0 0 20px rgba(200, 100% 60%, 0.1);
+}
+
+/* HUD Data visualization effects */
+.premium-hud .chart-container {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(30, 100% 60%, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-hud .chart-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(30, 100% 60%, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(200, 100% 60%, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.premium-hud .chart-line {
+  stroke: #ff6b35;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.6));
+}
+
+.premium-hud .chart-bar {
+  fill: url(#hudGradient);
+  filter: drop-shadow(0 0 10px rgba(30, 100% 60%, 0.5));
+}
+
+/* HUD Table effects */
+.premium-hud .table-row:hover {
+  background: rgba(30, 100% 60%, 0.05);
+  box-shadow: 
+    inset 0 0 30px rgba(30, 100% 60%, 0.1),
+    0 0 20px rgba(200, 100% 60%, 0.05);
+}
+
+/* HUD Badge effects */
+.premium-hud .badge {
+  background: rgba(30, 100% 60%, 0.2);
+  border: 1px solid rgba(30, 100% 60%, 0.5);
+  color: #ff6b35;
+  text-shadow: 0 0 8px rgba(255, 107, 53, 0.6);
+  box-shadow: 0 0 15px rgba(30, 100% 60%, 0.3);
+}
+
+/* HUD Progress bars */
+.premium-hud .progress-bar {
+  background: linear-gradient(90deg, #ff6b35, #f7931e);
+  box-shadow: 
+    0 0 20px rgba(255, 107, 53, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-hud .progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: progressScan 1.5s ease-in-out infinite;
+}
+
+@keyframes progressScan {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+/* Premium DataGrid Theme Styles */
+.premium-datagrid {
+  background: 
+    linear-gradient(45deg, transparent 48%, rgba(255, 255, 255, 0.02) 49%, rgba(255, 255, 255, 0.02) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(255, 255, 255, 0.02) 49%, rgba(255, 255, 255, 0.02) 51%, transparent 52%),
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+    linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #000000 50%, #0a0a0a 75%, #000000 100%);
+  background-size: 20px 20px, 20px 20px, 200px 200px, 200px 200px, 400% 400%;
+  animation: datagridGradient 25s ease infinite;
+  position: relative;
+}
+
+.premium-datagrid::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(255, 255, 255, 0.05) 1px,
+      rgba(255, 255, 255, 0.05) 2px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(255, 255, 255, 0.05) 1px,
+      rgba(255, 255, 255, 0.05) 2px
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.premium-datagrid::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.01) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+  animation: datagridPulse 8s ease-in-out infinite;
+}
+
+@keyframes datagridGradient {
+  0% { background-position: 0% 50%, 0% 50%, 0% 0%, 100% 100%, 0% 50%; }
+  50% { background-position: 100% 50%, 100% 50%, 100% 100%, 0% 0%, 100% 50%; }
+  100% { background-position: 0% 50%, 0% 50%, 0% 0%, 100% 100%, 0% 50%; }
+}
+
+@keyframes datagridPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+.premium-datagrid .card {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 0 30px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-datagrid .card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(45deg, transparent 48%, rgba(255, 255, 255, 0.03) 49%, rgba(255, 255, 255, 0.03) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(255, 255, 255, 0.03) 49%, rgba(255, 255, 255, 0.03) 51%, transparent 52%);
+  background-size: 10px 10px;
+  pointer-events: none;
+}
+
+.premium-datagrid .card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: datagridScan 4s ease-in-out infinite;
+}
+
+@keyframes datagridScan {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+.premium-datagrid .card:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 0 50px rgba(255, 255, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.9);
+}
+
+.premium-datagrid .btn-primary {
+  background: linear-gradient(135deg, #ffffff, #e0e0e0);
+  border: 1px solid #ffffff;
+  box-shadow: 
+    0 0 30px rgba(255, 255, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  color: #000000;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-datagrid .btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: datagridButtonScan 2.5s ease-in-out infinite;
+}
+
+@keyframes datagridButtonScan {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+.premium-datagrid .btn-primary:hover {
+  background: linear-gradient(135deg, #e0e0e0, #ffffff);
+  box-shadow: 
+    0 0 40px rgba(255, 255, 255, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.premium-datagrid .input {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  box-shadow: 
+    inset 0 0 15px rgba(0, 0, 0, 0.5),
+    0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.premium-datagrid .input:focus {
+  border-color: #ffffff;
+  box-shadow: 
+    0 0 25px rgba(255, 255, 255, 0.3),
+    inset 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.premium-datagrid .sidebar {
+  background: rgba(0, 0, 0, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(25px);
+  position: relative;
+}
+
+.premium-datagrid .sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: datagridSidebarGlow 3s ease-in-out infinite;
+}
+
+@keyframes datagridSidebarGlow {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.8; }
+}
+
+.premium-datagrid .sidebar-item {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-datagrid .sidebar-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.3s ease;
+}
+
+.premium-datagrid .sidebar-item:hover::before {
+  left: 100%;
+}
+
+.premium-datagrid .sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 
+    0 0 25px rgba(255, 255, 255, 0.1),
+    inset 0 0 25px rgba(255, 255, 255, 0.05);
+}
+
+.premium-datagrid .sidebar-item.active {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 0 35px rgba(255, 255, 255, 0.2),
+    inset 0 0 25px rgba(255, 255, 255, 0.1);
+}
+
+/* DataGrid Data visualization effects */
+.premium-datagrid .chart-container {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-datagrid .chart-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(45deg, transparent 48%, rgba(255, 255, 255, 0.02) 49%, rgba(255, 255, 255, 0.02) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(255, 255, 255, 0.02) 49%, rgba(255, 255, 255, 0.02) 51%, transparent 52%);
+  background-size: 15px 15px;
+  pointer-events: none;
+}
+
+.premium-datagrid .chart-line {
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+
+.premium-datagrid .chart-bar {
+  fill: url(#datagridGradient);
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+}
+
+/* DataGrid Table effects */
+.premium-datagrid .table-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 
+    inset 0 0 40px rgba(255, 255, 255, 0.05),
+    0 0 25px rgba(255, 255, 255, 0.1);
+}
+
+/* DataGrid Badge effects */
+.premium-datagrid .badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+/* DataGrid Progress bars */
+.premium-datagrid .progress-bar {
+  background: linear-gradient(90deg, #ffffff, #e0e0e0);
+  box-shadow: 
+    0 0 25px rgba(255, 255, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-datagrid .progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: datagridProgressScan 2s ease-in-out infinite;
+}
+
+@keyframes datagridProgressScan {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+

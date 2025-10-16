@@ -1,0 +1,21 @@
+{
+  "sourceFile": "/Users/hrrniu/Desktop/JIMBO MEDIA/Program/bizops/uploads/invoices/1760546188730_Faktura_01_10_2025.pdf",
+  "provider": "tesseract",
+  "confidence": 0.16666666666666666,
+  "meta": {
+    "pages": 0,
+    "ocrMs": 0,
+    "parsedMs": 2
+  },
+  "seller": {},
+  "currency": "PLN",
+  "rawText": "",
+  "fields": [],
+  "validations": [
+    {
+      "name": "INVOICE_NUMBER_EXISTS",
+      "ok": false,
+      "details": "Invoice number not found"
+    }
+  ]
+}
