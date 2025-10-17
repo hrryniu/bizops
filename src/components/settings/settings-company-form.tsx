@@ -226,26 +226,60 @@ export function SettingsCompanyForm({ settings }: SettingsCompanyFormProps) {
           </Label>
           <div className="space-y-3">
             {companyLogo ? (
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <img
-                    src={companyLogo}
-                    alt="Logotyp firmy"
-                    className="w-20 h-20 object-contain border rounded-lg bg-gray-50"
-                  />
+              <div className="flex items-center gap-6">
+                <div className="relative group">
+                  <div 
+                    className="w-40 h-32 border-2 border-gray-200 rounded-lg p-4 flex items-center justify-center overflow-hidden"
+                    style={{
+                      backgroundImage: `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                                       linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                                       linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                                       linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`,
+                      backgroundSize: '20px 20px',
+                      backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+                    }}
+                  >
+                    <img
+                      src={companyLogo}
+                      alt="Logotyp firmy"
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="destructive"
                     size="sm"
-                    className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                    className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={handleRemoveLogo}
+                    title="Usuń logo"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Logotyp został załadowany</p>
-                  <p className="text-xs text-muted-foreground">Kliknij X aby usunąć</p>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500" />
+                    <p className="text-sm font-medium">Logotyp załadowany</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Najedź na logo aby zobaczyć opcję usunięcia</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                    id="logo-upload-replace"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('logo-upload-replace')?.click()}
+                    disabled={isUploadingLogo}
+                    className="flex items-center gap-2 mt-2 w-fit"
+                  >
+                    <Upload className="h-3 w-3" />
+                    Zmień logo
+                  </Button>
                 </div>
               </div>
             ) : (
