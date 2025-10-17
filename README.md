@@ -20,7 +20,7 @@ Pełna aplikacja do prowadzenia jednoosobowej działalności w Polsce, zawieraj�
 ### Opcja 3: Ręczne uruchomienie
 ```bash
 # Przejdź do katalogu aplikacji
-cd /Users/hrrniu/Desktop/JIMBO\ MEDIA/Program/bizops
+cd /path/to/bizops
 
 # Zainstaluj zależności (pierwsze uruchomienie)
 npm install

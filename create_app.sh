@@ -5,8 +5,8 @@
 
 echo "🔧 Tworzenie aplikacji macOS dla BizOps..."
 
-# Katalog aplikacji
-APP_DIR="/Users/hrrniu/Desktop/JIMBO MEDIA/Program/bizops"
+# Katalog aplikacji (automatycznie wykrywa bieżący katalog)
+APP_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 APP_NAME="BizOps.app"
 APP_PATH="$APP_DIR/$APP_NAME"
 
