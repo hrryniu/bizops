@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -58,6 +58,14 @@ export function SettingsCompanyForm({ settings }: SettingsCompanyFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const { toast } = useToast()
+
+  // Update logo when settings change
+  useEffect(() => {
+    if (settings?.companyLogo) {
+      console.log('Loading company logo from settings:', settings.companyLogo.substring(0, 50))
+      setCompanyLogo(settings.companyLogo)
+    }
+  }, [settings?.companyLogo])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -229,16 +237,22 @@ export function SettingsCompanyForm({ settings }: SettingsCompanyFormProps) {
               <div className="flex items-center gap-6">
                 <div className="relative group">
                   <div className="w-48 h-36 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-50 p-4 flex items-center justify-center overflow-hidden shadow-sm">
-                    {companyLogo && (
-                      <img
-                        src={companyLogo}
-                        alt="Logotyp firmy"
-                        className="max-w-full max-h-full object-contain"
-                        onError={(e) => {
-                          console.error('Error loading logo:', e)
-                          e.currentTarget.style.display = 'none'
-                        }}
-                      />
+                    <img
+                      src={companyLogo || ''}
+                      alt="Logotyp firmy"
+                      className="max-w-full max-h-full object-contain"
+                      style={{ display: companyLogo ? 'block' : 'none' }}
+                      onLoad={() => console.log('Logo loaded successfully')}
+                      onError={(e) => {
+                        console.error('Error loading logo. Logo data:', companyLogo?.substring(0, 100))
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                    {!companyLogo && (
+                      <div className="text-center text-gray-400">
+                        <ImageIcon className="h-12 w-12 mx-auto mb-2" />
+                        <p className="text-sm">Brak logo</p>
+                      </div>
                     )}
                   </div>
                   <Button
