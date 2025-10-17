@@ -159,11 +159,11 @@ export function SettingsAppearanceForm({ settings: initialSettings }: SettingsAp
           <h3 className="text-lg font-semibold mb-2">Główny kolor</h3>
           <p className="text-sm text-muted-foreground">Wybierz główny kolor interfejsu</p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-13 gap-4">
+        <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-13 gap-2">
           {colorOptions.map((color) => (
             <div
               key={color.value}
-                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                className={`border-2 rounded-lg p-2 cursor-pointer transition-all ${
                 settings.primaryColor === color.value
                   ? (color.value === 'cyan' || color.value === 'neon' || color.value === 'electric' || color.value === 'plasma' || color.value === 'cyber' || color.value === 'matrix' || color.value === 'hologram')
                     ? color.value === 'plasma' || color.value === 'cyber' || color.value === 'matrix'
@@ -182,13 +182,13 @@ export function SettingsAppearanceForm({ settings: initialSettings }: SettingsAp
               }`}
               onClick={() => setSettings(prev => ({ ...prev, primaryColor: color.value }))}
             >
-              <div className="space-y-3">
-                <div className={`w-full h-12 ${color.color} rounded-lg flex items-center justify-center`}>
-                  <span className="text-white font-bold text-sm">{color.label}</span>
+              <div className="space-y-1.5">
+                <div className={`w-full h-8 ${color.color} rounded flex items-center justify-center`}>
+                  <span className="text-white font-bold text-xs">{color.label}</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm">{color.label}</h3>
-                  <p className="text-xs text-muted-foreground">{color.description}</p>
+                  <h3 className="font-semibold text-xs">{color.label}</h3>
+                  <p className="text-[10px] text-muted-foreground leading-tight">{color.description}</p>
                 </div>
               </div>
             </div>
@@ -202,11 +202,11 @@ export function SettingsAppearanceForm({ settings: initialSettings }: SettingsAp
           <h3 className="text-lg font-semibold mb-2">Kolor akcentu</h3>
           <p className="text-sm text-muted-foreground">Wybierz kolor dla elementów interaktywnych</p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-13 gap-4">
+        <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-13 gap-2">
           {colorOptions.map((color) => (
             <div
               key={color.value}
-              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+              className={`border-2 rounded-lg p-2 cursor-pointer transition-all ${
                 settings.accentColor === color.value
                   ? (color.value === 'cyan' || color.value === 'neon' || color.value === 'electric' || color.value === 'plasma' || color.value === 'cyber' || color.value === 'matrix' || color.value === 'hologram')
                     ? color.value === 'plasma' || color.value === 'cyber' || color.value === 'matrix'
@@ -225,13 +225,13 @@ export function SettingsAppearanceForm({ settings: initialSettings }: SettingsAp
               }`}
               onClick={() => setSettings(prev => ({ ...prev, accentColor: color.value }))}
             >
-              <div className="space-y-3">
-                <div className={`w-full h-12 ${color.color} rounded-lg flex items-center justify-center`}>
-                  <span className="text-white font-bold text-sm">{color.label}</span>
+              <div className="space-y-1.5">
+                <div className={`w-full h-8 ${color.color} rounded flex items-center justify-center`}>
+                  <span className="text-white font-bold text-xs">{color.label}</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm">{color.label}</h3>
-                  <p className="text-xs text-muted-foreground">{color.description}</p>
+                  <h3 className="font-semibold text-xs">{color.label}</h3>
+                  <p className="text-[10px] text-muted-foreground leading-tight">{color.description}</p>
                 </div>
               </div>
             </div>
