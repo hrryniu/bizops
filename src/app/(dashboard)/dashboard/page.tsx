@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Charts } from '@/components/dashboard/charts'
 import { t } from '@/lib/i18n'
+import { EditableDashboard } from '@/components/dashboard/editable-dashboard'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -64,7 +65,10 @@ export default async function DashboardPage() {
   })
 
   const expensesSum = await prisma.expense.aggregate({
-    where: { userId },
+    where: { 
+      userId,
+      isInstallment: false, // Wyklucz zakupy na raty
+    },
     _sum: { grossAmount: true },
   })
 
@@ -93,6 +97,7 @@ export default async function DashboardPage() {
     prisma.expense.findMany({
       where: {
         userId,
+        isInstallment: false, // Wyklucz zakupy na raty z wykresów
         date: {
           gte: sixMonthsAgo,
         },
@@ -108,6 +113,7 @@ export default async function DashboardPage() {
       by: ['category'],
       where: {
         userId,
+        isInstallment: false, // Wyklucz zakupy na raty z wykresów kategorii
         date: {
           gte: sixMonthsAgo,
         },
@@ -130,6 +136,7 @@ export default async function DashboardPage() {
     prisma.expense.aggregate({
       where: {
         userId,
+        isInstallment: false, // Wyklucz zakupy na raty z VAT
         date: {
           gte: sixMonthsAgo,
         },
@@ -190,12 +197,7 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Witaj w BizOps! Oto przegląd Twojej działalności.</p>
-      </div>
-
+    <EditableDashboard>
       {/* Statystyki */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -356,7 +358,7 @@ export default async function DashboardPage() {
         vatData={vatChartData}
         isVatPayer={isVatPayer}
       />
-    </div>
+    </EditableDashboard>
   )
 }
 

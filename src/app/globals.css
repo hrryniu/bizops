@@ -830,3 +830,10 @@
   100% { left: 100%; }
 }
 
+/* Dashboard edit mode animation */
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+}
+
