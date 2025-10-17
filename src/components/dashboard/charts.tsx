@@ -39,9 +39,10 @@ interface ChartsProps {
   monthlyData: MonthlyData[]
   categoryData: CategoryData[]
   vatData: VatData[]
+  isVatPayer?: boolean
 }
 
-export function Charts({ monthlyData, categoryData, vatData }: ChartsProps) {
+export function Charts({ monthlyData, categoryData, vatData, isVatPayer = true }: ChartsProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -116,37 +117,39 @@ export function Charts({ monthlyData, categoryData, vatData }: ChartsProps) {
         </CardContent>
       </Card>
 
-      {/* Wykres VAT */}
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle>VAT - Należny vs Naliczony</CardTitle>
-          <CardDescription>Podsumowanie VAT w ostatnich 6 miesiącach</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <h4 className="font-medium">Należny VAT</h4>
-              <div className="text-2xl font-bold text-green-600">
-                {formatCurrency(vatData.find(v => v.name === 'Należny')?.value || 0)}
+      {/* Wykres VAT - tylko dla płatników VAT */}
+      {isVatPayer && (
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>VAT - Należny vs Naliczony</CardTitle>
+            <CardDescription>Podsumowanie VAT w ostatnich 6 miesiącach</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <h4 className="font-medium">Należny VAT</h4>
+                <div className="text-2xl font-bold text-green-600">
+                  {formatCurrency(vatData.find(v => v.name === 'Należny')?.value || 0)}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium">Naliczony VAT</h4>
+                <div className="text-2xl font-bold text-red-600">
+                  {formatCurrency(vatData.find(v => v.name === 'Naliczony')?.value || 0)}
+                </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <h4 className="font-medium">Naliczony VAT</h4>
-              <div className="text-2xl font-bold text-red-600">
-                {formatCurrency(vatData.find(v => v.name === 'Naliczony')?.value || 0)}
+            <div className="mt-4">
+              <div className="text-lg font-medium">
+                Do zapłaty: {formatCurrency(
+                  (vatData.find(v => v.name === 'Należny')?.value || 0) - 
+                  (vatData.find(v => v.name === 'Naliczony')?.value || 0)
+                )}
               </div>
             </div>
-          </div>
-          <div className="mt-4">
-            <div className="text-lg font-medium">
-              Do zapłaty: {formatCurrency(
-                (vatData.find(v => v.name === 'Należny')?.value || 0) - 
-                (vatData.find(v => v.name === 'Naliczony')?.value || 0)
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

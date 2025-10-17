@@ -11,6 +11,11 @@ interface BankAccount {
   name: string
   accountNumber: string
   isDefault: boolean
+  isForeign: boolean
+  bicSwift?: string
+  correspondentBankBic?: string
+  correspondentBankAddress?: string
+  currency?: string
 }
 
 interface Settings {
@@ -158,7 +163,16 @@ export function SettingsCompanyForm({ settings }: SettingsCompanyFormProps) {
   }
 
   const addBankAccount = () => {
-    setBankAccounts(prev => [...prev, { name: '', accountNumber: '', isDefault: prev.length === 0 }])
+    setBankAccounts(prev => [...prev, { 
+      name: '', 
+      accountNumber: '', 
+      isDefault: prev.length === 0,
+      isForeign: false,
+      bicSwift: '',
+      correspondentBankBic: '',
+      correspondentBankAddress: '',
+      currency: 'PLN'
+    }])
   }
 
   const removeBankAccount = (index: number) => {
@@ -182,6 +196,19 @@ export function SettingsCompanyForm({ settings }: SettingsCompanyFormProps) {
         newAccounts.forEach((acc, i) => {
           if (i !== index) acc.isDefault = false
         })
+      }
+      
+      // If switching to foreign account, set default currency to EUR
+      if (field === 'isForeign' && value === true) {
+        newAccounts[index].currency = 'EUR'
+      }
+      
+      // If switching to domestic account, clear foreign fields
+      if (field === 'isForeign' && value === false) {
+        newAccounts[index].bicSwift = ''
+        newAccounts[index].correspondentBankBic = ''
+        newAccounts[index].correspondentBankAddress = ''
+        newAccounts[index].currency = 'PLN'
       }
       
       return newAccounts
@@ -327,58 +354,131 @@ export function SettingsCompanyForm({ settings }: SettingsCompanyFormProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              {bankAccounts.map((account, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={account.isDefault}
-                        onChange={(e) => updateBankAccount(index, 'isDefault', e.target.checked)}
-                        className="rounded"
-                      />
-                      <Label className="text-sm font-medium">
-                        {account.isDefault ? 'Konto domyślne' : 'Konto dodatkowe'}
-                      </Label>
-                    </div>
-                    {bankAccounts.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => removeBankAccount(index)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor={`account-name-${index}`}>Nazwa konta</Label>
-                      <Input
-                        id={`account-name-${index}`}
-                        value={account.name}
-                        onChange={(e) => updateBankAccount(index, 'name', e.target.value)}
-                        placeholder="np. Konto operacyjne, Konto inwestycyjne"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor={`account-number-${index}`}>Numer konta</Label>
-                      <Input
-                        id={`account-number-${index}`}
-                        value={account.accountNumber}
-                        onChange={(e) => updateBankAccount(index, 'accountNumber', e.target.value)}
-                        placeholder="XX XXXX XXXX XXXX XXXX XXXX XXXX"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                        {bankAccounts.map((account, index) => (
+                          <div key={index} className="border rounded-lg p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={account.isDefault}
+                                    onChange={(e) => updateBankAccount(index, 'isDefault', e.target.checked)}
+                                    className="rounded"
+                                  />
+                                  <Label className="text-sm font-medium">
+                                    {account.isDefault ? 'Konto domyślne' : 'Konto dodatkowe'}
+                                  </Label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={account.isForeign}
+                                    onChange={(e) => updateBankAccount(index, 'isForeign', e.target.checked)}
+                                    className="rounded"
+                                  />
+                                  <Label className="text-sm font-medium">
+                                    Konto walutowe
+                                  </Label>
+                                </div>
+                              </div>
+                              {bankAccounts.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => removeBankAccount(index)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="space-y-2">
+                                <Label htmlFor={`account-name-${index}`}>Nazwa konta</Label>
+                                <Input
+                                  id={`account-name-${index}`}
+                                  value={account.name}
+                                  onChange={(e) => updateBankAccount(index, 'name', e.target.value)}
+                                  placeholder="np. Konto operacyjne, Konto inwestycyjne"
+                                  required
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor={`account-number-${index}`}>Numer konta</Label>
+                                <Input
+                                  id={`account-number-${index}`}
+                                  value={account.accountNumber}
+                                  onChange={(e) => updateBankAccount(index, 'accountNumber', e.target.value)}
+                                  placeholder={account.isForeign ? "IBAN: XX XX XXXX XXXX XXXX XXXX XXXX" : "XX XXXX XXXX XXXX XXXX XXXX XXXX"}
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            {/* Foreign account fields */}
+                            {account.isForeign && (
+                              <div className="space-y-3 border-t pt-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`bic-swift-${index}`}>Kod BIC/SWIFT</Label>
+                                    <Input
+                                      id={`bic-swift-${index}`}
+                                      value={account.bicSwift || ''}
+                                      onChange={(e) => updateBankAccount(index, 'bicSwift', e.target.value)}
+                                      placeholder="np. DEUTDEFF"
+                                      required
+                                    />
+                                  </div>
+                                  
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`currency-${index}`}>Waluta</Label>
+                                    <select
+                                      id={`currency-${index}`}
+                                      value={account.currency || 'EUR'}
+                                      onChange={(e) => updateBankAccount(index, 'currency', e.target.value)}
+                                      className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                      required
+                                    >
+                                      <option value="EUR">EUR - Euro</option>
+                                      <option value="USD">USD - Dolar amerykański</option>
+                                      <option value="GBP">GBP - Funt brytyjski</option>
+                                      <option value="CHF">CHF - Frank szwajcarski</option>
+                                      <option value="CZK">CZK - Korona czeska</option>
+                                      <option value="SEK">SEK - Korona szwedzka</option>
+                                      <option value="NOK">NOK - Korona norweska</option>
+                                      <option value="DKK">DKK - Korona duńska</option>
+                                    </select>
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label htmlFor={`correspondent-bic-${index}`}>BIC banku korespondenta</Label>
+                                  <Input
+                                    id={`correspondent-bic-${index}`}
+                                    value={account.correspondentBankBic || ''}
+                                    onChange={(e) => updateBankAccount(index, 'correspondentBankBic', e.target.value)}
+                                    placeholder="np. CHASUS33"
+                                  />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label htmlFor={`correspondent-address-${index}`}>Adres banku korespondenta</Label>
+                                  <textarea
+                                    id={`correspondent-address-${index}`}
+                                    value={account.correspondentBankAddress || ''}
+                                    onChange={(e) => updateBankAccount(index, 'correspondentBankAddress', e.target.value)}
+                                    placeholder="Pełny adres banku korespondenta"
+                                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
+                                    rows={3}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
             </div>
           )}
           

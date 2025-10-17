@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import {
   LayoutDashboard,
   FileText,
@@ -17,12 +19,12 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { signOut } from 'next-auth/react'
 
-const navigation = [
+const baseNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, shortcut: 'g d' },
   { name: 'Faktury', href: '/invoices', icon: FileText, shortcut: 'g i' },
   { name: 'Koszty', href: '/expenses', icon: Receipt, shortcut: 'g e' },
   { name: 'Kontrahenci', href: '/contractors', icon: Users, shortcut: 'g k' },
-  { name: 'Kalendarz', href: '/calendar', icon: Calendar, shortcut: 'g c' },
+  { name: 'Kalendarz', href: '/calendar', icon: Calendar, shortcut: 'g c', requiresVatPayer: true },
   { name: 'Projekty', href: '/projects', icon: FolderKanban, shortcut: 'g p' },
   { name: 'Doradca Podatkowy', href: '/tax-advisor', icon: Bot, shortcut: 'g t' },
   { name: 'Ustawienia', href: '/settings', icon: Settings, shortcut: 'g s' },
@@ -30,11 +32,40 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const [isVatPayer, setIsVatPayer] = useState(true)
+
+  useEffect(() => {
+    const fetchVatStatus = async () => {
+      try {
+        const response = await fetch('/api/settings')
+        if (response.ok) {
+          const data = await response.json()
+          setIsVatPayer(data.settings?.isVatPayer ?? true)
+        }
+      } catch (error) {
+        console.error('Failed to fetch VAT status:', error)
+      }
+    }
+    
+    fetchVatStatus()
+  }, [])
+
+  // Filter navigation based on VAT payer status
+  const navigation = baseNavigation.filter(item => 
+    !item.requiresVatPayer || isVatPayer
+  )
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-card">
-      <div className="flex h-16 items-center border-b px-6">
-        <h1 className="text-xl font-bold text-primary">BizOps</h1>
+      <div className="flex h-16 items-center justify-center border-b px-4">
+        <Image 
+          src="/logo.png" 
+          alt="BizOps" 
+          width={160} 
+          height={96}
+          className="object-contain"
+          priority
+        />
       </div>
       <nav className="flex-1 space-y-1 p-4">
         {navigation.map((item) => {

@@ -33,6 +33,8 @@ model Settings {
   companyAddress     String?
   companyBankAccount String? // Deprecated - use bankAccounts instead
   companyLogo        String?
+  showLogoOnInvoices Boolean @default(true) // Czy wyświetlać logo na fakturach
+  invoiceTemplate    String  @default("classic") // Szablon faktury: classic, modern, minimal
   invoiceNumbering   String? // np. "NR/{{MM}}/{{YYYY}}"
   taxFormLabel       String? // np. "liniowy 19%" – tylko opis
   isVatPayer         Boolean @default(true) // Czy firma jest płatnikiem VAT

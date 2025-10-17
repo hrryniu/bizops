@@ -64,6 +64,10 @@ export async function POST(request: NextRequest) {
         ...(type === 'language' && {
           locale: data.locale,
         }),
+        ...(type === 'invoice' && {
+          showLogoOnInvoices: data.showLogoOnInvoices,
+          invoiceTemplate: data.invoiceTemplate,
+        }),
       },
       create: {
         userId: session.user.id,
@@ -91,6 +95,10 @@ export async function POST(request: NextRequest) {
         }),
         ...(type === 'language' && {
           locale: data.locale,
+        }),
+        ...(type === 'invoice' && {
+          showLogoOnInvoices: data.showLogoOnInvoices,
+          invoiceTemplate: data.invoiceTemplate,
         }),
       },
     })

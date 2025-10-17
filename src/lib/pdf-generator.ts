@@ -138,6 +138,7 @@ type InvoiceWithDetails = {
   dueDate: Date | null
   paymentMethod: string | null
   selectedBankAccount: string | null
+  currency: string
   notes: string | null
   totalNet: string
   totalVat: string
@@ -229,12 +230,27 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails) {
     
     // Display selected bank account or default one
     let bankAccountToShow = null
+    let bankAccountDetails = null
     if (invoice.selectedBankAccount && settings.bankAccounts) {
       try {
         const bankAccounts = JSON.parse(settings.bankAccounts)
         const selectedAccount = bankAccounts.find((acc: any) => acc.name === invoice.selectedBankAccount)
         if (selectedAccount) {
           bankAccountToShow = `${selectedAccount.name}: ${selectedAccount.accountNumber}`
+          
+          // Add foreign account details if applicable
+          if (selectedAccount.isForeign) {
+            bankAccountDetails = []
+            if (selectedAccount.bicSwift) {
+              bankAccountDetails.push(`BIC/SWIFT: ${selectedAccount.bicSwift}`)
+            }
+            if (selectedAccount.correspondentBankBic) {
+              bankAccountDetails.push(`BIC banku korespondenta: ${selectedAccount.correspondentBankBic}`)
+            }
+            if (selectedAccount.correspondentBankAddress) {
+              bankAccountDetails.push(`Adres banku korespondenta: ${selectedAccount.correspondentBankAddress}`)
+            }
+          }
         }
       } catch (error) {
         console.error('Error parsing bank accounts:', error)
@@ -248,6 +264,15 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails) {
     
     if (bankAccountToShow) {
       addText(`Konto: ${bankAccountToShow}`, 50, 145)
+      
+      // Add foreign account details
+      if (bankAccountDetails && bankAccountDetails.length > 0) {
+        let yOffset = 160
+        bankAccountDetails.forEach(detail => {
+          addText(detail, 50, yOffset, { size: 9 })
+          yOffset += 12
+        })
+      }
     }
   }
   
@@ -319,16 +344,16 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails) {
   // Totals
   currentY += 30
   addText('Razem netto:', 400, currentY, { size: 10 })
-  addText(parseFloat(invoice.totalNet).toFixed(2), 500, currentY, { size: 10 })
+  addText(`${parseFloat(invoice.totalNet).toFixed(2)} ${invoice.currency}`, 500, currentY, { size: 10 })
   
   currentY += 20
   addText('VAT:', 400, currentY, { size: 10 })
-  addText(parseFloat(invoice.totalVat).toFixed(2), 500, currentY, { size: 10 })
+  addText(`${parseFloat(invoice.totalVat).toFixed(2)} ${invoice.currency}`, 500, currentY, { size: 10 })
   
   currentY += 20
   addLine(400, currentY - 10, width - 50, currentY - 10)
   addText('Razem brutto:', 400, currentY, { size: 12, color: rgb(0.1, 0.1, 0.1) })
-  addText(parseFloat(invoice.totalGross).toFixed(2), 500, currentY, { size: 12, color: rgb(0.1, 0.1, 0.1) })
+  addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, 500, currentY, { size: 12, color: rgb(0.1, 0.1, 0.1) })
   
   // Notes
   if (invoice.notes) {

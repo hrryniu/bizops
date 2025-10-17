@@ -8,8 +8,25 @@ export default async function CalendarPage() {
   const session = await getServerSession(authOptions)
   const userId = session?.user?.id!
 
-  const taxEvents = await prisma.taxEvent.findMany({
+  // Pobierz ustawienia użytkownika
+  const settings = await prisma.settings.findUnique({
     where: { userId },
+    select: { isVatPayer: true },
+  })
+  const isVatPayer = settings?.isVatPayer ?? true
+
+  const taxEvents = await prisma.taxEvent.findMany({
+    where: { 
+      userId,
+      // Filtruj wydarzenia VAT jeśli użytkownik nie jest płatnikiem VAT
+      ...(isVatPayer ? {} : {
+        templateKey: {
+          not: {
+            contains: 'VAT',
+          },
+        },
+      }),
+    },
     orderBy: { dueDate: 'asc' },
   })
 

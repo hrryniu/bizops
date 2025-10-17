@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { SettingsCompanyForm } from '@/components/settings/settings-company-form'
 import { SettingsTaxForm } from '@/components/settings/settings-tax-form'
+import { SettingsInvoiceForm } from '@/components/settings/settings-invoice-form'
 import { SettingsAppearanceForm } from '@/components/settings/settings-appearance-form'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -32,6 +33,7 @@ export default async function SettingsPage() {
       <Tabs defaultValue="company" className="space-y-4">
         <TabsList>
           <TabsTrigger value="company">Dane firmy</TabsTrigger>
+          <TabsTrigger value="invoices">Faktury</TabsTrigger>
           <TabsTrigger value="tax">Podatki i kalendarz</TabsTrigger>
           <TabsTrigger value="export">Eksport/Import</TabsTrigger>
           <TabsTrigger value="appearance">Wygląd</TabsTrigger>
@@ -47,6 +49,20 @@ export default async function SettingsPage() {
             </CardHeader>
             <CardContent>
               <SettingsCompanyForm settings={settings} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="invoices">
+          <Card>
+            <CardHeader>
+              <CardTitle>Ustawienia faktur</CardTitle>
+              <CardDescription>
+                Konfiguracja wyglądu i szablonów faktur
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SettingsInvoiceForm settings={settings} />
             </CardContent>
           </Card>
         </TabsContent>

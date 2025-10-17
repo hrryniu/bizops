@@ -20,6 +20,7 @@ const updateExpenseSchema = z.object({
   netAmount: z.number().optional(),
   vatAmount: z.number().optional(),
   grossAmount: z.number().optional(),
+  isInstallment: z.boolean().optional(),
   notes: z.string().optional(),
 })
 
@@ -106,6 +107,7 @@ export async function PATCH(
         netAmount: parseFloat(formData.get('netAmount') as string) || 0,
         vatAmount: parseFloat(formData.get('vatAmount') as string) || 0,
         grossAmount: parseFloat(formData.get('grossAmount') as string) || 0,
+        isInstallment: formData.get('isInstallment') === 'true',
         notes: formData.get('notes') as string,
       }
 
@@ -152,6 +154,7 @@ export async function PATCH(
         ...(validatedData.netAmount !== undefined && { netAmount: validatedData.netAmount }),
         ...(validatedData.vatAmount !== undefined && { vatAmount: validatedData.vatAmount }),
         ...(validatedData.grossAmount !== undefined && { grossAmount: validatedData.grossAmount }),
+        ...(validatedData.isInstallment !== undefined && { isInstallment: validatedData.isInstallment }),
         ...(validatedData.notes !== undefined && { notes: validatedData.notes || null }),
         ...(attachmentPath && { attachmentPath }),
       },

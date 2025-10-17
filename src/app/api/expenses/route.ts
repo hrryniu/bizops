@@ -20,6 +20,7 @@ const expenseSchema = z.object({
   netAmount: z.number(),
   vatAmount: z.number(),
   grossAmount: z.number(),
+  isInstallment: z.boolean().optional(),
   notes: z.string().optional(),
 })
 
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
         netAmount: parseFloat(formData.get('netAmount') as string) || 0,
         vatAmount: parseFloat(formData.get('vatAmount') as string) || 0,
         grossAmount: parseFloat(formData.get('grossAmount') as string) || 0,
+        isInstallment: formData.get('isInstallment') === 'true',
         notes: formData.get('notes') as string,
       }
 
@@ -117,6 +119,7 @@ export async function POST(request: NextRequest) {
         netAmount: validatedData.netAmount,
         vatAmount: validatedData.vatAmount,
         grossAmount: validatedData.grossAmount,
+        isInstallment: validatedData.isInstallment || false,
         notes: validatedData.notes || null,
         attachmentPath,
       },

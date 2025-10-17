@@ -1,71 +1,38 @@
 #!/bin/bash
 
-# BizOps - Skrypt uruchamiający aplikację
-# Autor: AI Assistant
-# Data: $(date)
+# Simple BizOps starter script
+# Prosty skrypt do uruchamiania BizOps
 
-echo "🚀 Uruchamianie BizOps..."
-echo "================================"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Sprawdź czy Node.js jest zainstalowany
-if ! command -v node &> /dev/null; then
-    echo "❌ Node.js nie jest zainstalowany!"
-    echo "📥 Pobierz Node.js z: https://nodejs.org/"
-    echo "💡 Lub zainstaluj przez Homebrew: brew install node"
-    read -p "Naciśnij Enter aby kontynuować..."
-    exit 1
-fi
-
-# Sprawdź czy npm jest dostępny
-if ! command -v npm &> /dev/null; then
-    echo "❌ npm nie jest dostępny!"
-    read -p "Naciśnij Enter aby kontynuować..."
-    exit 1
-fi
-
-echo "✅ Node.js $(node --version) jest zainstalowany"
-echo "✅ npm $(npm --version) jest dostępny"
-
-# Przejdź do katalogu aplikacji
-cd "$(dirname "$0")"
-
-# Sprawdź czy katalog node_modules istnieje
-if [ ! -d "node_modules" ]; then
-    echo "📦 Instalowanie zależności..."
-    npm install
-    if [ $? -ne 0 ]; then
-        echo "❌ Błąd podczas instalacji zależności!"
-        read -p "Naciśnij Enter aby kontynuować..."
-        exit 1
-    fi
-    echo "✅ Zależności zainstalowane"
-fi
-
-# Sprawdź czy baza danych jest skonfigurowana
-if [ ! -f "prisma/dev.db" ]; then
-    echo "🗄️  Konfigurowanie bazy danych..."
-    npx prisma migrate dev --name init
-    if [ $? -ne 0 ]; then
-        echo "❌ Błąd podczas konfiguracji bazy danych!"
-        read -p "Naciśnij Enter aby kontynuować..."
-        exit 1
-    fi
-    
-    echo "🌱 Dodawanie przykładowych danych..."
-    npm run prisma:seed
-    if [ $? -ne 0 ]; then
-        echo "⚠️  Ostrzeżenie: Nie udało się dodać przykładowych danych"
-    fi
-    echo "✅ Baza danych skonfigurowana"
-fi
-
+echo "🚀 BizOps - Zarządzanie działalnością"
+echo "======================================"
 echo ""
-echo "🎉 Wszystko gotowe! Uruchamianie aplikacji..."
-echo "🌐 Aplikacja będzie dostępna pod adresem: http://localhost:3000"
-echo "📧 Domyślne konto: admin@bizops.pl / hasło: admin123"
+echo "Wybierz opcję:"
+echo "1) Uruchom aplikację (launch-bizops.sh)"
+echo "2) Utwórz aplikację macOS (create-macos-app.sh)"
+echo "3) Wyjście"
 echo ""
-echo "⏹️  Aby zatrzymać aplikację, naciśnij Ctrl+C"
-echo "================================"
 
-# Uruchom aplikację
-npm run dev
+read -p "Twój wybór (1-3): " choice
+
+case $choice in
+    1)
+        echo ""
+        echo "🚀 Uruchamianie BizOps..."
+        exec "$SCRIPT_DIR/launch-bizops.sh"
+        ;;
+    2)
+        echo ""
+        echo "🍎 Tworzenie aplikacji macOS..."
+        exec "$SCRIPT_DIR/create-macos-app.sh"
+        ;;
+    3)
+        echo "👋 Do widzenia!"
+        exit 0
+        ;;
+    *)
+        echo "❌ Nieprawidłowy wybór. Wybierz 1, 2 lub 3."
+        exit 1
+        ;;
+esac

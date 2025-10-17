@@ -21,6 +21,7 @@ type Expense = {
   date: Date
   category: string | null
   grossAmount: number
+  isInstallment: boolean
   contractor: { name: string } | null
   contractorName: string | null
   attachmentPath: string | null
@@ -81,6 +82,7 @@ export function ExpensesList({ expenses }: { expenses: Expense[] }) {
               <TableHead>Kategoria</TableHead>
               <TableHead>Kontrahent</TableHead>
               <TableHead>Wartość brutto</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Notatki</TableHead>
               <TableHead>Załącznik</TableHead>
               <TableHead className="text-right">Akcje</TableHead>
@@ -89,7 +91,7 @@ export function ExpensesList({ expenses }: { expenses: Expense[] }) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   Brak kosztów
                 </TableCell>
               </TableRow>
@@ -101,6 +103,13 @@ export function ExpensesList({ expenses }: { expenses: Expense[] }) {
                   <TableCell>{expense.contractorName || expense.contractor?.name || '-'}</TableCell>
                   <TableCell className="font-medium">
                     {formatCurrency(expense.grossAmount)}
+                  </TableCell>
+                  <TableCell>
+                    {expense.isInstallment && (
+                      <Badge variant="secondary" className="text-xs">
+                        Raty
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="max-w-xs">
                     {expense.notes ? (

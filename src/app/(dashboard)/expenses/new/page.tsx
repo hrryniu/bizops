@@ -57,6 +57,7 @@ export default function NewExpensePage() {
     netAmount: '',
     vatAmount: '',
     grossAmount: '',
+    isInstallment: false,
     notes: '',
   })
 
@@ -192,6 +193,7 @@ export default function NewExpensePage() {
         netAmount: parseFloat(formData.netAmount) || 0,
         vatAmount: parseFloat(formData.vatAmount) || 0,
         grossAmount: parseFloat(formData.grossAmount) || 0,
+        isInstallment: formData.isInstallment,
         issueDate: formData.issueDate || null,
         saleDate: formData.saleDate || null,
       }
@@ -572,6 +574,30 @@ export default function NewExpensePage() {
                   </Button>
                 </div>
               )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Zakup na raty */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Opcje płatności</CardTitle>
+            <CardDescription>
+              Zaznacz jeśli to zakup na raty (nie zostanie wliczony do sumy kosztów)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isInstallment"
+                checked={formData.isInstallment}
+                onChange={(e) => setFormData({ ...formData, isInstallment: e.target.checked })}
+                className="w-4 h-4 rounded border-gray-300"
+              />
+              <Label htmlFor="isInstallment" className="cursor-pointer font-normal">
+                To jest zakup na raty (nie wliczaj do sumy kosztów)
+              </Label>
             </div>
           </CardContent>
         </Card>

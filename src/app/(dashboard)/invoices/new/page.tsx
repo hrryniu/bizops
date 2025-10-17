@@ -46,6 +46,11 @@ type BankAccount = {
   name: string
   accountNumber: string
   isDefault: boolean
+  isForeign: boolean
+  bicSwift?: string
+  correspondentBankBic?: string
+  correspondentBankAddress?: string
+  currency?: string
 }
 
 type InvoiceItem = {
@@ -67,6 +72,7 @@ export default function NewInvoicePage() {
   const [loading, setLoading] = useState(false)
   const [contractors, setContractors] = useState<Contractor[]>([])
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
+  const [isVatPayer, setIsVatPayer] = useState(true)
   const [showFileParser, setShowFileParser] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState('modern')
   const [previewTemplate, setPreviewTemplate] = useState<'modern' | 'classic' | 'minimal' | null>(null)
@@ -82,6 +88,7 @@ export default function NewInvoicePage() {
     dueDate: '',
     paymentMethod: '',
     selectedBankAccount: '',
+    currency: 'PLN',
     buyerId: '',
     notes: '',
   })
@@ -92,7 +99,7 @@ export default function NewInvoicePage() {
       quantity: '1',
       unit: 'szt',
       netPrice: '0',
-      vatRate: '23',
+      vatRate: '23', // Will be updated based on VAT payer status
       discount: '0',
       lineNet: '0',
       lineVat: '0',
@@ -125,12 +132,23 @@ export default function NewInvoicePage() {
         if (data.settings?.bankAccounts) {
           const accounts = JSON.parse(data.settings.bankAccounts)
           setBankAccounts(accounts)
-          // Set default account if available
-          const defaultAccount = accounts.find((acc: BankAccount) => acc.isDefault)
-          if (defaultAccount) {
-            setFormData(prev => ({ ...prev, selectedBankAccount: defaultAccount.name }))
-          }
+        // Set default account if available
+        const defaultAccount = accounts.find((acc: BankAccount) => acc.isDefault)
+        if (defaultAccount) {
+          setFormData(prev => ({ 
+            ...prev, 
+            selectedBankAccount: defaultAccount.name,
+            currency: defaultAccount.currency || 'PLN'
+          }))
         }
+        }
+        
+        // Set VAT payer status
+        setIsVatPayer(data.settings?.isVatPayer ?? true)
+        
+        // Update default VAT rate based on VAT payer status
+        const defaultVatRate = data.settings?.isVatPayer === false ? 'zw' : '23'
+        setItems(prev => prev.map(item => ({ ...item, vatRate: defaultVatRate })))
       }
     } catch (error) {
       console.error('Failed to fetch bank accounts:', error)
@@ -163,13 +181,14 @@ export default function NewInvoicePage() {
 
   const addItem = () => {
     const newId = (Math.max(...items.map(i => parseInt(i.id))) + 1).toString()
+    const defaultVatRate = isVatPayer ? '23' : 'zw'
     setItems([...items, {
       id: newId,
       name: '',
       quantity: '1',
       unit: 'szt',
       netPrice: '0',
-      vatRate: '23',
+      vatRate: defaultVatRate,
       discount: '0',
       lineNet: '0',
       lineVat: '0',
@@ -181,6 +200,15 @@ export default function NewInvoicePage() {
     if (items.length > 1) {
       setItems(items.filter(item => item.id !== id))
     }
+  }
+
+  const handleBankAccountChange = (accountName: string) => {
+    const selectedAccount = bankAccounts.find(acc => acc.name === accountName)
+    setFormData(prev => ({
+      ...prev,
+      selectedBankAccount: accountName,
+      currency: selectedAccount?.currency || 'PLN'
+    }))
   }
 
   const calculateTotals = () => {
@@ -287,8 +315,17 @@ export default function NewInvoicePage() {
 
     try {
       const totals = calculateTotals()
+      
+      // Add VAT exemption note for non-VAT payers
+      let notes = formData.notes
+      if (!isVatPayer) {
+        const vatExemptionNote = "Podstawa prawna zwolnienia z VAT, zwolnienie przedmiotowe, art. 43 ust. 1"
+        notes = notes ? `${notes}\n\n${vatExemptionNote}` : vatExemptionNote
+      }
+      
       const invoiceData = {
         ...formData,
+        notes,
         // Jeśli osoba prywatna, buyerId będzie puste, ale dodajemy dane osoby
         ...(isPrivatePerson ? {
           buyerId: null,
@@ -590,19 +627,47 @@ export default function NewInvoicePage() {
               {formData.paymentMethod === 'przelew' && bankAccounts.length > 0 && (
                 <div className="space-y-2">
                   <Label htmlFor="selectedBankAccount">Konto bankowe</Label>
-                  <Select value={formData.selectedBankAccount} onValueChange={(value) => setFormData({ ...formData, selectedBankAccount: value })}>
+                  <Select value={formData.selectedBankAccount} onValueChange={handleBankAccountChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Wybierz konto" />
                     </SelectTrigger>
                     <SelectContent>
                       {bankAccounts.map((account) => (
                         <SelectItem key={account.name} value={account.name}>
-                          {account.name} - {account.accountNumber}
+                          {account.name} - {account.accountNumber} {account.isForeign && `(${account.currency})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
+              )}
+
+              {/* Currency selection - only show for foreign accounts */}
+              {formData.paymentMethod === 'przelew' && formData.selectedBankAccount && (
+                (() => {
+                  const selectedAccount = bankAccounts.find(acc => acc.name === formData.selectedBankAccount)
+                  return selectedAccount?.isForeign ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="currency">Waluta faktury</Label>
+                      <select
+                        id="currency"
+                        value={formData.currency}
+                        onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value }))}
+                        className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      >
+                        <option value="PLN">PLN - Złoty polski</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="USD">USD - Dolar amerykański</option>
+                        <option value="GBP">GBP - Funt brytyjski</option>
+                        <option value="CHF">CHF - Frank szwajcarski</option>
+                        <option value="CZK">CZK - Korona czeska</option>
+                        <option value="SEK">SEK - Korona szwedzka</option>
+                        <option value="NOK">NOK - Korona norweska</option>
+                        <option value="DKK">DKK - Korona duńska</option>
+                      </select>
+                    </div>
+                  ) : null
+                })()
               )}
             </div>
 

@@ -23,6 +23,7 @@ export default async function ExpensesPage() {
     netAmount: Number(expense.netAmount),
     vatAmount: Number(expense.vatAmount),
     grossAmount: Number(expense.grossAmount),
+    isInstallment: expense.isInstallment,
   }))
 
   return (
