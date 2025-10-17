@@ -35,8 +35,10 @@ model Settings {
   companyLogo        String?
   invoiceNumbering   String? // np. "NR/{{MM}}/{{YYYY}}"
   taxFormLabel       String? // np. "liniowy 19%" – tylko opis
+  isVatPayer         Boolean @default(true) // Czy firma jest płatnikiem VAT
   defaultVatRates    String  @default("[\"23\",\"8\",\"5\",\"0\",\"zw\"]") // JSON array
   calendarTemplates  String  @default("[]") // JSON array definicji terminów
+  expenseCategories  String  @default("[\"Biuro\",\"Transport\",\"Wyposażenie\",\"Marketing\",\"Usługi\",\"Inne\"]") // JSON array kategorii kosztów
   locale             String  @default("pl-PL")
   darkMode           String  @default("system") // system, light, dark
   theme              String  @default("system") // light, dark, system
@@ -125,6 +127,7 @@ model Expense {
   netAmount              Decimal     @default(0)
   vatAmount              Decimal     @default(0)
   grossAmount            Decimal     @default(0)
+  isInstallment          Boolean     @default(false) // Zakup na raty - nie wliczać do sumy kosztów
   notes                  String?
   attachmentPath         String?
   contractor             Contractor? @relation(fields: [contractorId], references: [id], onDelete: SetNull)

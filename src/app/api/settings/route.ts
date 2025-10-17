@@ -50,8 +50,10 @@ export async function POST(request: NextRequest) {
         }),
         ...(type === 'tax' && {
           taxFormLabel: data.taxFormLabel,
+          isVatPayer: data.isVatPayer,
           defaultVatRates: data.defaultVatRates,
           calendarTemplates: data.calendarTemplates,
+          expenseCategories: data.expenseCategories,
         }),
         ...(type === 'appearance' && {
           theme: data.theme,
@@ -76,8 +78,10 @@ export async function POST(request: NextRequest) {
         }),
         ...(type === 'tax' && {
           taxFormLabel: data.taxFormLabel,
+          isVatPayer: data.isVatPayer,
           defaultVatRates: data.defaultVatRates,
           calendarTemplates: data.calendarTemplates,
+          expenseCategories: data.expenseCategories,
         }),
         ...(type === 'appearance' && {
           theme: data.theme,
