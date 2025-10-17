@@ -161,3 +161,4 @@ export function calculateConfidence(data: InvoiceData, ocrConfidence: number): n
   return maxScore > 0 ? Math.min(score / maxScore, 1) : ocrConfidence;
 }
 
+

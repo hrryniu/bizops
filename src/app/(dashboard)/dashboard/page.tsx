@@ -7,10 +7,19 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Charts } from '@/components/dashboard/charts'
+import { t } from '@/lib/i18n'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
   const userId = session?.user?.id!
+
+  // Pobierz ustawienia użytkownika
+  const settings = await prisma.settings.findUnique({
+    where: { userId },
+    select: { isVatPayer: true, locale: true },
+  })
+  const isVatPayer = settings?.isVatPayer ?? true
+  const locale = settings?.locale ?? 'pl-PL'
 
   // Pobierz statystyki
   const [invoices, expenses, upcomingTaxEvents] = await Promise.all([
@@ -31,6 +40,14 @@ export default async function DashboardPage() {
         userId,
         status: 'PENDING',
         dueDate: { gte: new Date() },
+        // Filtruj wydarzenia VAT jeśli użytkownik nie jest płatnikiem VAT
+        ...(isVatPayer ? {} : {
+          templateKey: {
+            not: {
+              contains: 'VAT',
+            },
+          },
+        }),
       },
       take: 5,
       orderBy: { dueDate: 'asc' },
@@ -279,7 +296,7 @@ export default async function DashboardPage() {
                     <div className="text-right">
                       <div className="font-medium">{formatCurrency(invoice.totalGross)}</div>
                       <Badge variant={invoice.status === 'PAID' ? 'default' : 'outline'}>
-                        {invoice.status}
+                        {t(`invoiceStatus.${invoice.status}`, locale)}
                       </Badge>
                     </div>
                   </div>
@@ -310,7 +327,7 @@ export default async function DashboardPage() {
                     <div>
                       <div className="font-medium">{expense.category || 'Bez kategorii'}</div>
                       <div className="text-sm text-muted-foreground">
-                        {expense.contractor?.name || 'Brak kontrahenta'}
+                        {expense.contractorName || expense.contractor?.name || 'Brak kontrahenta'}
                       </div>
                     </div>
                     <div className="text-right">
@@ -337,6 +354,7 @@ export default async function DashboardPage() {
         monthlyData={monthlyData}
         categoryData={categoryData}
         vatData={vatChartData}
+        isVatPayer={isVatPayer}
       />
     </div>
   )

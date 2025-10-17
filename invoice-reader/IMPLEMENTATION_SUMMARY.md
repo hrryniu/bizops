@@ -206,3 +206,4 @@ Moduł invoice-reader jest **w pełni funkcjonalny** i gotowy do użycia w produ
 **Technologie:** TypeScript, Tesseract.js, Sharp, pdf-parse, pdfjs-dist
 **Test Coverage:** 100% core functionality
 
+

@@ -134,3 +134,4 @@ function detectLineItemsHeuristic(text: string, currency: string): InvoicePositi
   return positions;
 }
 
+
