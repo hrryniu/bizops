@@ -228,28 +228,24 @@ export function SettingsCompanyForm({ settings }: SettingsCompanyFormProps) {
             {companyLogo ? (
               <div className="flex items-center gap-6">
                 <div className="relative group">
-                  <div 
-                    className="w-40 h-32 border-2 border-gray-200 rounded-lg p-4 flex items-center justify-center overflow-hidden"
-                    style={{
-                      backgroundImage: `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
-                                       linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
-                                       linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
-                                       linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`,
-                      backgroundSize: '20px 20px',
-                      backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
-                    }}
-                  >
-                    <img
-                      src={companyLogo}
-                      alt="Logotyp firmy"
-                      className="max-w-full max-h-full object-contain"
-                    />
+                  <div className="w-48 h-36 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-50 p-4 flex items-center justify-center overflow-hidden shadow-sm">
+                    {companyLogo && (
+                      <img
+                        src={companyLogo}
+                        alt="Logotyp firmy"
+                        className="max-w-full max-h-full object-contain"
+                        onError={(e) => {
+                          console.error('Error loading logo:', e)
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    )}
                   </div>
                   <Button
                     type="button"
                     variant="destructive"
                     size="sm"
-                    className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={handleRemoveLogo}
                     title="Usuń logo"
                   >
