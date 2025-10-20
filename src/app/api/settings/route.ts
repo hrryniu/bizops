@@ -34,74 +34,74 @@ export async function POST(request: NextRequest) {
     }
 
     const { type, data } = await request.json()
+    
+    console.log('[Settings API] Received request:', { type, data })
+
+    // Prepare update and create objects
+    let updateData: any = {}
+    let createData: any = { userId: session.user.id }
+
+    if (type === 'company') {
+      const companyData = {
+        companyName: data.companyName,
+        companyNIP: data.companyNIP,
+        companyAddress: data.companyAddress,
+        companyBankAccount: data.companyBankAccount,
+        companyLogo: data.companyLogo,
+        bankAccounts: data.bankAccounts,
+        invoiceNumbering: data.invoiceNumbering,
+      }
+      updateData = companyData
+      createData = { ...createData, ...companyData }
+    } else if (type === 'tax') {
+      const taxData = {
+        taxFormLabel: data.taxFormLabel,
+        isVatPayer: data.isVatPayer,
+        defaultVatRates: data.defaultVatRates,
+        calendarTemplates: data.calendarTemplates,
+        expenseCategories: data.expenseCategories,
+      }
+      updateData = taxData
+      createData = { ...createData, ...taxData }
+    } else if (type === 'appearance') {
+      const appearanceData = {
+        theme: data.theme,
+        primaryColor: data.primaryColor,
+        accentColor: data.accentColor,
+        layout: data.layout,
+      }
+      updateData = appearanceData
+      createData = { ...createData, ...appearanceData }
+    } else if (type === 'language') {
+      const languageData = {
+        locale: data.locale,
+      }
+      updateData = languageData
+      createData = { ...createData, ...languageData }
+    } else if (type === 'invoice') {
+      const invoiceData = {
+        showLogoOnInvoices: data.showLogoOnInvoices,
+        invoiceTemplate: data.invoiceTemplate,
+      }
+      updateData = invoiceData
+      createData = { ...createData, ...invoiceData }
+    } else {
+      return NextResponse.json(
+        { error: 'Invalid settings type' },
+        { status: 400 }
+      )
+    }
+
+    console.log('[Settings API] Upserting with:', { updateData, createData })
 
     // Upsert settings - create if doesn't exist, update if exists
     const settings = await prisma.settings.upsert({
       where: { userId: session.user.id },
-      update: {
-        ...(type === 'company' && {
-          companyName: data.companyName,
-          companyNIP: data.companyNIP,
-          companyAddress: data.companyAddress,
-          companyBankAccount: data.companyBankAccount,
-          companyLogo: data.companyLogo,
-          bankAccounts: data.bankAccounts,
-          invoiceNumbering: data.invoiceNumbering,
-        }),
-        ...(type === 'tax' && {
-          taxFormLabel: data.taxFormLabel,
-          isVatPayer: data.isVatPayer,
-          defaultVatRates: data.defaultVatRates,
-          calendarTemplates: data.calendarTemplates,
-          expenseCategories: data.expenseCategories,
-        }),
-        ...(type === 'appearance' && {
-          theme: data.theme,
-          primaryColor: data.primaryColor,
-          accentColor: data.accentColor,
-          layout: data.layout,
-        }),
-        ...(type === 'language' && {
-          locale: data.locale,
-        }),
-        ...(type === 'invoice' && {
-          showLogoOnInvoices: data.showLogoOnInvoices,
-          invoiceTemplate: data.invoiceTemplate,
-        }),
-      },
-      create: {
-        userId: session.user.id,
-        ...(type === 'company' && {
-          companyName: data.companyName,
-          companyNIP: data.companyNIP,
-          companyAddress: data.companyAddress,
-          companyBankAccount: data.companyBankAccount,
-          companyLogo: data.companyLogo,
-          bankAccounts: data.bankAccounts,
-          invoiceNumbering: data.invoiceNumbering,
-        }),
-        ...(type === 'tax' && {
-          taxFormLabel: data.taxFormLabel,
-          isVatPayer: data.isVatPayer,
-          defaultVatRates: data.defaultVatRates,
-          calendarTemplates: data.calendarTemplates,
-          expenseCategories: data.expenseCategories,
-        }),
-        ...(type === 'appearance' && {
-          theme: data.theme,
-          primaryColor: data.primaryColor,
-          accentColor: data.accentColor,
-          layout: data.layout,
-        }),
-        ...(type === 'language' && {
-          locale: data.locale,
-        }),
-        ...(type === 'invoice' && {
-          showLogoOnInvoices: data.showLogoOnInvoices,
-          invoiceTemplate: data.invoiceTemplate,
-        }),
-      },
+      update: updateData,
+      create: createData,
     })
+
+    console.log('[Settings API] Upsert successful:', settings.id)
 
     return NextResponse.json({ 
       success: true, 
@@ -109,9 +109,9 @@ export async function POST(request: NextRequest) {
       message: 'Settings updated successfully' 
     })
   } catch (error) {
-    console.error('Error saving settings:', error)
+    console.error('[Settings API] Error saving settings:', error)
     return NextResponse.json(
-      { error: 'Failed to save settings' },
+      { error: 'Failed to save settings', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

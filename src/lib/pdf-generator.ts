@@ -166,12 +166,16 @@ type InvoiceWithDetails = {
       companyAddress: string | null
       companyBankAccount: string | null
       bankAccounts: string | null
+      companyLogo: string | null
+      showLogoOnInvoices: boolean
     } | null
   }
 }
 
 export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: string = 'classic') {
   const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib')
+  const fs = await import('fs')
+  const path = await import('path')
   
   // Create a new PDF document
   const pdfDoc = await PDFDocument.create()
@@ -181,6 +185,62 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: 
   
   // Load font that supports UTF-8
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+  
+  // Get settings
+  const settings = invoice.user.settings
+  
+  // Load logo if enabled
+  let logoImage: any = null
+  let logoWidth = 0
+  let logoHeight = 0
+  
+  if (settings?.showLogoOnInvoices && settings?.companyLogo) {
+    try {
+      let logoBytes: Buffer
+      
+      // Check if logo is base64 encoded (starts with 'data:image')
+      if (settings.companyLogo.startsWith('data:image')) {
+        // Extract base64 data from data URL
+        const base64Data = settings.companyLogo.split(',')[1]
+        logoBytes = Buffer.from(base64Data, 'base64')
+        
+        // Determine image type from data URL
+        const imageType = settings.companyLogo.split(';')[0].split('/')[1]
+        
+        if (imageType === 'png') {
+          logoImage = await pdfDoc.embedPng(logoBytes)
+        } else if (imageType === 'jpeg' || imageType === 'jpg') {
+          logoImage = await pdfDoc.embedJpg(logoBytes)
+        }
+      } else {
+        // Try to load logo from file system (legacy support)
+        const logoPath = path.join(process.cwd(), 'public', settings.companyLogo)
+        
+        if (fs.existsSync(logoPath)) {
+          logoBytes = fs.readFileSync(logoPath)
+          
+          // Determine file type and embed
+          if (settings.companyLogo.toLowerCase().endsWith('.png')) {
+            logoImage = await pdfDoc.embedPng(logoBytes)
+          } else if (settings.companyLogo.toLowerCase().endsWith('.jpg') || 
+                     settings.companyLogo.toLowerCase().endsWith('.jpeg')) {
+            logoImage = await pdfDoc.embedJpg(logoBytes)
+          }
+        }
+      }
+      
+      if (logoImage) {
+        // Calculate dimensions (max height 40px, maintain aspect ratio)
+        const maxHeight = 40
+        const aspectRatio = logoImage.width / logoImage.height
+        logoHeight = maxHeight
+        logoWidth = maxHeight * aspectRatio
+      }
+    } catch (error) {
+      console.error('Error loading logo:', error)
+      // Continue without logo if there's an error
+    }
+  }
   
   // Helper function to add text with proper encoding
   const addText = (text: string, x: number, y: number, options: any = {}) => {
@@ -214,37 +274,48 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: 
   }
   
   // Helper function to add rectangle
-  const addRect = (x: number, y: number, width: number, height: number, options: any = {}) => {
+  const addRect = (x: number, y: number, width: number, rectHeight: number, options: any = {}) => {
     page.drawRectangle({
       x,
-      y: height - y - height,
+      y: height - y - rectHeight,
       width,
-      height,
+      height: rectHeight,
       borderColor: options.borderColor || rgb(0.8, 0.8, 0.8),
       borderWidth: options.borderWidth || 0,
       color: options.color,
     })
   }
   
-  // Get settings
-  const settings = invoice.user.settings
+  // Helper function to add logo
+  const addLogo = (x: number, y: number) => {
+    if (logoImage) {
+      page.drawImage(logoImage, {
+        x,
+        y: height - y - logoHeight,
+        width: logoWidth,
+        height: logoHeight,
+      })
+      return logoWidth
+    }
+    return 0
+  }
   
   // Generate based on template
   switch (template) {
     case 'classic':
-      generateClassicTemplate(page, invoice, settings, { addText, addLine, addRect, width, height, rgb, font })
+      generateClassicTemplate(page, invoice, settings, { addText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
       break
     case 'professional':
-      generateProfessionalTemplate(page, invoice, settings, { addText, addLine, addRect, width, height, rgb, font })
+      generateProfessionalTemplate(page, invoice, settings, { addText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
       break
     case 'modern':
-      generateModernTemplate(page, invoice, settings, { addText, addLine, addRect, width, height, rgb, font })
+      generateModernTemplate(page, invoice, settings, { addText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
       break
     case 'minimal':
-      generateMinimalTemplate(page, invoice, settings, { addText, addLine, addRect, width, height, rgb, font })
+      generateMinimalTemplate(page, invoice, settings, { addText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
       break
     default:
-      generateClassicTemplate(page, invoice, settings, { addText, addLine, addRect, width, height, rgb, font })
+      generateClassicTemplate(page, invoice, settings, { addText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
   }
   
   // Serialize the PDF
@@ -254,11 +325,15 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: 
 
 // Classic template inspired by afaktury.pl
 function generateClassicTemplate(page: any, invoice: any, settings: any, helpers: any) {
-  const { addText, addLine, addRect, width, height, rgb } = helpers
+  const { addText, addLine, addRect, addLogo, width, height, rgb, logoWidth } = helpers
   
-  // Logo area (afaktury.pl style)
-  addText('a', 50, 50, { size: 12, color: rgb(0, 0.66, 0.42) }) // Green 'a'
-  addText('faktury.pl', 65, 50, { size: 12, color: rgb(0, 0, 0) })
+  // Logo area
+  const logoRenderedWidth = addLogo(50, 50)
+  
+  // If no logo, show placeholder text
+  if (!logoRenderedWidth && settings?.companyName) {
+    addText(settings.companyName, 50, 50, { size: 12, color: rgb(0, 0.4, 0.8) })
+  }
   
   // Dates in top right
   addText(`Data wystawienia: ${formatDate(invoice.issueDate)}`, width - 150, 50, { size: 9 })
@@ -367,12 +442,17 @@ function generateClassicTemplate(page: any, invoice: any, settings: any, helpers
 
 // Professional template inspired by CargoLink
 function generateProfessionalTemplate(page: any, invoice: any, settings: any, helpers: any) {
-  const { addText, addLine, addRect, width, height, rgb } = helpers
+  const { addText, addLine, addRect, addLogo, width, height, rgb, logoWidth } = helpers
   
-  // Logo area (CargoLink style)
-  addRect(50, 30, 15, 15, { color: rgb(0, 0.4, 0.8) }) // Blue circle
-  addText('C', 57, 40, { size: 10, color: rgb(1, 1, 1) })
-  addText('CARGOLINK', 70, 40, { size: 12, color: rgb(0, 0.4, 0.8) })
+  // Logo area
+  const logoRenderedWidth = addLogo(50, 30)
+  
+  // If no logo, show placeholder with company name
+  if (!logoRenderedWidth && settings?.companyName) {
+    addRect(50, 30, 15, 15, { color: rgb(0, 0.4, 0.8) })
+    addText(settings.companyName.charAt(0), 57, 40, { size: 10, color: rgb(1, 1, 1) })
+    addText(settings.companyName, 70, 40, { size: 12, color: rgb(0, 0.4, 0.8) })
+  }
   
   // Invoice header
   addText('FAKTURA', width - 100, 40, { size: 14, color: rgb(0, 0, 0) })
@@ -484,11 +564,15 @@ function generateProfessionalTemplate(page: any, invoice: any, settings: any, he
 
 // Modern template (existing)
 function generateModernTemplate(page: any, invoice: any, settings: any, helpers: any) {
-  const { addText, addLine, addRect, width, height, rgb } = helpers
+  const { addText, addLine, addRect, addLogo, width, height, rgb, logoWidth } = helpers
+  
+  // Logo at the top
+  const logoRenderedWidth = addLogo(50, 40)
   
   // Modern header
-  addText('FAKTURA', 50, 50, { size: 18, color: rgb(0, 0, 0) })
-  addText(`NR ${invoice.number}`, 50, 70, { size: 10, color: rgb(0.4, 0.4, 0.4) })
+  const headerX = logoRenderedWidth > 0 ? 50 + logoRenderedWidth + 20 : 50
+  addText('FAKTURA', headerX, 50, { size: 18, color: rgb(0, 0, 0) })
+  addText(`NR ${invoice.number}`, headerX, 70, { size: 10, color: rgb(0.4, 0.4, 0.4) })
   addText(formatDate(invoice.issueDate), width - 100, 50, { size: 9, color: rgb(0.4, 0.4, 0.4) })
   
   // Company info
@@ -554,37 +638,42 @@ function generateModernTemplate(page: any, invoice: any, settings: any, helpers:
 
 // Minimal template (existing)
 function generateMinimalTemplate(page: any, invoice: any, settings: any, helpers: any) {
-  const { addText, addLine, addRect, width, height, rgb } = helpers
+  const { addText, addLine, addRect, addLogo, width, height, rgb, logoWidth } = helpers
+  
+  // Logo at the top if available
+  const logoRenderedWidth = addLogo(50, 30)
+  const startY = logoRenderedWidth > 0 ? 80 : 50
   
   // Minimal header
-  addText(`Faktura ${invoice.number}`, 50, 50, { size: 12, color: rgb(0.2, 0.2, 0.2) })
-  addText(`Data wystawienia: ${formatDate(invoice.issueDate)}`, 50, 70, { size: 8, color: rgb(0.4, 0.4, 0.4) })
+  addText(`Faktura ${invoice.number}`, 50, startY, { size: 12, color: rgb(0.2, 0.2, 0.2) })
+  addText(`Data wystawienia: ${formatDate(invoice.issueDate)}`, 50, startY + 20, { size: 8, color: rgb(0.4, 0.4, 0.4) })
   if (invoice.dueDate) {
-    addText(`Termin: ${formatDate(invoice.dueDate)}`, width - 100, 70, { size: 8, color: rgb(0.4, 0.4, 0.4) })
+    addText(`Termin: ${formatDate(invoice.dueDate)}`, width - 100, startY + 20, { size: 8, color: rgb(0.4, 0.4, 0.4) })
   }
   
   // Company info
-  addText('Od:', 50, 100, { size: 8, color: rgb(0.2, 0.2, 0.2) })
+  const companyY = startY + 50
+  addText('Od:', 50, companyY, { size: 8, color: rgb(0.2, 0.2, 0.2) })
   if (settings) {
-    addText(settings.companyName || 'Nazwa firmy', 50, 115, { size: 9, color: rgb(0.4, 0.4, 0.4) })
+    addText(settings.companyName || 'Nazwa firmy', 50, companyY + 15, { size: 9, color: rgb(0.4, 0.4, 0.4) })
     if (settings.companyAddress) {
-      addText(settings.companyAddress, 50, 130, { size: 8, color: rgb(0.4, 0.4, 0.4) })
+      addText(settings.companyAddress, 50, companyY + 30, { size: 8, color: rgb(0.4, 0.4, 0.4) })
     }
   }
   
   // Buyer info
-  addText('Dla:', 300, 100, { size: 8, color: rgb(0.2, 0.2, 0.2) })
+  addText('Dla:', 300, companyY, { size: 8, color: rgb(0.2, 0.2, 0.2) })
   if (invoice.buyerPrivatePerson) {
-    addText(invoice.buyerPrivatePerson, 300, 115, { size: 9, color: rgb(0.4, 0.4, 0.4) })
+    addText(invoice.buyerPrivatePerson, 300, companyY + 15, { size: 9, color: rgb(0.4, 0.4, 0.4) })
   } else if (invoice.buyer) {
-    addText(invoice.buyer.name, 300, 115, { size: 9, color: rgb(0.4, 0.4, 0.4) })
+    addText(invoice.buyer.name, 300, companyY + 15, { size: 9, color: rgb(0.4, 0.4, 0.4) })
     if (invoice.buyer.address) {
-      addText(invoice.buyer.address, 300, 130, { size: 8, color: rgb(0.4, 0.4, 0.4) })
+      addText(invoice.buyer.address, 300, companyY + 30, { size: 8, color: rgb(0.4, 0.4, 0.4) })
     }
   }
   
   // Items table
-  const tableY = 160
+  const tableY = companyY + 60
   addRect(50, tableY, width - 100, 12, { color: rgb(0.95, 0.95, 0.95) })
   
   addText('Opis', 60, tableY + 8, { size: 7 })

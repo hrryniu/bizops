@@ -11,9 +11,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Plus, Trash2, FileText } from 'lucide-react'
 import { formatDate, calculateLineItem } from '@/lib/utils'
 import { InvoiceFileParser } from '@/components/invoices/invoice-file-parser'
-import { TemplatePreviewDialog } from '@/components/invoices/template-preview-dialog'
 import { InvoiceReaderUpload } from '@/components/invoices/invoice-reader-upload'
-import { Eye } from 'lucide-react'
 
 type ParsedInvoiceData = {
   invoiceNumber?: string
@@ -74,8 +72,6 @@ export default function NewInvoicePage() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
   const [isVatPayer, setIsVatPayer] = useState(true)
   const [showFileParser, setShowFileParser] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState('modern')
-  const [previewTemplate, setPreviewTemplate] = useState<'modern' | 'classic' | 'minimal' | null>(null)
   const [isPrivatePerson, setIsPrivatePerson] = useState(false)
   const [privatePerson, setPrivatePerson] = useState({
     firstName: '',
@@ -343,7 +339,6 @@ export default function NewInvoicePage() {
           lineGross: item.lineGross,
         })),
         ...totals,
-        template: selectedTemplate,
       }
 
       const response = await fetch('/api/invoices', {
@@ -384,110 +379,6 @@ export default function NewInvoicePage() {
 
       {/* Inteligentne rozpoznawanie faktur */}
       <InvoiceReaderUpload onDataExtracted={handleInvoiceReaderData} />
-
-      {/* Wybór szablonu faktury */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Szablon faktury</CardTitle>
-          <CardDescription>Wybierz szablon dla swojej faktury</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Szablon Modern */}
-            <div 
-              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                selectedTemplate === 'modern' 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-              onClick={() => setSelectedTemplate('modern')}
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">Modern</h3>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setPreviewTemplate('modern')
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground">Czysty, nowoczesny design</p>
-                <div className="h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">MODERN</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Szablon Classic */}
-            <div 
-              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                selectedTemplate === 'classic' 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-              onClick={() => setSelectedTemplate('classic')}
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">Classic</h3>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setPreviewTemplate('classic')
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground">Tradycyjny, elegancki styl</p>
-                <div className="h-16 bg-gradient-to-r from-gray-700 to-gray-800 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">CLASSIC</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Szablon Minimal */}
-            <div 
-              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                selectedTemplate === 'minimal' 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-              onClick={() => setSelectedTemplate('minimal')}
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">Minimal</h3>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setPreviewTemplate('minimal')
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground">Prosty, minimalistyczny</p>
-                <div className="h-16 bg-gradient-to-r from-green-500 to-green-600 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">MINIMAL</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Podstawowe informacje */}
@@ -837,14 +728,6 @@ export default function NewInvoicePage() {
             />
           </div>
         </div>
-      )}
-
-      {previewTemplate && (
-        <TemplatePreviewDialog
-          template={previewTemplate}
-          isOpen={!!previewTemplate}
-          onClose={() => setPreviewTemplate(null)}
-        />
       )}
     </div>
   )

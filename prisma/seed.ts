@@ -64,6 +64,8 @@ async function main() {
       companyNIP: '1234567890',
       companyAddress: 'ul. Przykładowa 1, 00-000 Warszawa',
       companyBankAccount: '12 3456 7890 1234 5678 9012 3456',
+      companyLogo: 'logo.png',
+      showLogoOnInvoices: true,
       invoiceNumbering: 'FV/{{MM}}/{{YYYY}}/{{NR}}',
       taxFormLabel: 'Podatek liniowy 19%',
       defaultVatRates: JSON.stringify(['23', '8', '5', '0', 'zw']),
