@@ -139,26 +139,75 @@ export function SettingsCompanyForm({ settings }: SettingsCompanyFormProps) {
     setIsUploadingLogo(true)
 
     try {
-      // Konwertuj plik na base64
+      // Load image and convert to PNG for PDF compatibility
+      const img = new Image()
       const reader = new FileReader()
-      reader.onload = () => {
-        const base64 = reader.result as string
-        setCompanyLogo(base64)
+      
+      reader.onload = (e) => {
+        img.onload = () => {
+          try {
+            // Create canvas and draw image
+            const canvas = document.createElement('canvas')
+            canvas.width = img.width
+            canvas.height = img.height
+            const ctx = canvas.getContext('2d')
+            
+            if (!ctx) {
+              throw new Error('Could not get canvas context')
+            }
+            
+            ctx.drawImage(img, 0, 0)
+            
+            // Convert to PNG base64
+            const pngBase64 = canvas.toDataURL('image/png')
+            setCompanyLogo(pngBase64)
+            
+            toast({
+              title: 'Logotyp załadowany',
+              description: 'Logotyp został pomyślnie załadowany i przekonwertowany do PNG.',
+            })
+          } catch (error) {
+            console.error('Error converting image:', error)
+            toast({
+              title: 'Błąd',
+              description: 'Nie udało się przetworzyć obrazu.',
+              variant: 'destructive',
+            })
+          } finally {
+            setIsUploadingLogo(false)
+          }
+        }
+        
+        img.onerror = () => {
+          setIsUploadingLogo(false)
+          toast({
+            title: 'Błąd',
+            description: 'Nie udało się załadować obrazu.',
+            variant: 'destructive',
+          })
+        }
+        
+        img.src = e.target?.result as string
+      }
+      
+      reader.onerror = () => {
+        setIsUploadingLogo(false)
         toast({
-          title: 'Logotyp załadowany',
-          description: 'Logotyp został pomyślnie załadowany.',
+          title: 'Błąd',
+          description: 'Nie udało się odczytać pliku.',
+          variant: 'destructive',
         })
       }
+      
       reader.readAsDataURL(file)
     } catch (error) {
       console.error('Error uploading logo:', error)
+      setIsUploadingLogo(false)
       toast({
         title: 'Błąd',
         description: 'Nie udało się załadować logotypu.',
         variant: 'destructive',
       })
-    } finally {
-      setIsUploadingLogo(false)
     }
   }
 

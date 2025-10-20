@@ -221,6 +221,10 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: 
         } else if (imageType === 'jpeg' || imageType === 'jpg') {
           logoImage = await pdfDoc.embedJpg(logoBytes)
           console.log('[PDF Generator] JPG logo embedded successfully')
+        } else {
+          // For unsupported formats (like TIFF), skip and log warning
+          console.warn(`[PDF Generator] Unsupported image format: ${imageType}. Please re-upload logo as PNG or JPG.`)
+          console.log('[PDF Generator] To fix: Go to Settings > Company Data and re-upload your logo.')
         }
       } else {
         // Try to load logo from file system (legacy support)
