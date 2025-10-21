@@ -73,6 +73,7 @@ export default function NewInvoicePage() {
   const [isVatPayer, setIsVatPayer] = useState(true)
   const [showFileParser, setShowFileParser] = useState(false)
   const [isPrivatePerson, setIsPrivatePerson] = useState(false)
+  const [autoNumbering, setAutoNumbering] = useState(true)
   const [privatePerson, setPrivatePerson] = useState({
     firstName: '',
     lastName: '',
@@ -107,6 +108,32 @@ export default function NewInvoicePage() {
     fetchContractors()
     fetchBankAccounts()
   }, [])
+  
+  // Generuj automatyczny numer faktury
+  useEffect(() => {
+    if (autoNumbering && formData.issueDate) {
+      generateAutoNumber()
+    }
+  }, [autoNumbering, formData.issueDate])
+  
+  const generateAutoNumber = async () => {
+    try {
+      const issueDate = new Date(formData.issueDate)
+      const year = issueDate.getFullYear()
+      const month = issueDate.getMonth() + 1
+      
+      // Pobierz faktury z tego samego miesiąca
+      const response = await fetch(`/api/invoices/next-number?year=${year}&month=${month}`)
+      if (response.ok) {
+        const data = await response.json()
+        const monthStr = month.toString().padStart(2, '0')
+        const autoNumber = `FV/${data.nextNumber}/${monthStr}/${year}`
+        setFormData(prev => ({ ...prev, number: autoNumber }))
+      }
+    } catch (error) {
+      console.error('Failed to generate invoice number:', error)
+    }
+  }
 
   const fetchContractors = async () => {
     try {
@@ -389,13 +416,32 @@ export default function NewInvoicePage() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="number">Numer faktury *</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="number">Numer faktury *</Label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={autoNumbering}
+                      onChange={(e) => setAutoNumbering(e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    <span>Automatyczna numeracja</span>
+                  </label>
+                </div>
                 <Input
                   id="number"
                   value={formData.number}
                   onChange={(e) => setFormData({ ...formData, number: e.target.value })}
                   required
+                  readOnly={autoNumbering}
+                  className={autoNumbering ? 'bg-muted cursor-not-allowed' : ''}
+                  placeholder={autoNumbering ? 'Generowane automatycznie' : 'Wpisz numer faktury'}
                 />
+                {autoNumbering && (
+                  <p className="text-xs text-muted-foreground">
+                    Format: FV/numer/miesiąc/rok (np. FV/1/10/2025)
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Typ nabywcy</Label>
