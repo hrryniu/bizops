@@ -245,8 +245,8 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: 
       }
       
       if (logoImage) {
-        // Calculate dimensions (max height 40px, maintain aspect ratio)
-        const maxHeight = 40
+        // Calculate dimensions (max height 80px, maintain aspect ratio)
+        const maxHeight = 80
         const aspectRatio = logoImage.width / logoImage.height
         logoHeight = maxHeight
         logoWidth = maxHeight * aspectRatio
@@ -409,8 +409,8 @@ function generateClassicTemplate(page: any, invoice: any, settings: any, helpers
   }
   
   // Invoice number with underline
-  addText(`Faktura nr: ${invoice.number}`, 50, 100, { size: 18, color: rgb(0, 0, 0) })
-  addLine(50, 112, 250, 112, 2, rgb(0, 0, 0))
+  addText(`Faktura nr: ${invoice.number}`, 50, 100, { size: 14, color: rgb(0, 0, 0) })
+  addLine(50, 110, 250, 110, 2, rgb(0, 0, 0))
   
   // Seller and buyer sections
   addText('Sprzedawca', 50, 135, { size: 11, color: rgb(0, 0, 0) })
@@ -534,11 +534,10 @@ function generateProfessionalTemplate(page: any, invoice: any, settings: any, he
   }
   
   // Invoice header
-  addText('FAKTURA', width - 100, 40, { size: 14, color: rgb(0, 0, 0) })
-  addText(invoice.number, width - 100, 55, { size: 10, color: rgb(0.4, 0.4, 0.4) })
-  addText(`Wystawienie: ${formatDate(invoice.issueDate)}`, width - 100, 70, { size: 8, color: rgb(0.4, 0.4, 0.4) })
+  addText(`FAKTURA ${invoice.number}`, width - 150, 40, { size: 14, color: rgb(0, 0, 0) })
+  addText(`Wystawienie: ${formatDate(invoice.issueDate)}`, width - 150, 58, { size: 8, color: rgb(0.4, 0.4, 0.4) })
   if (invoice.saleDate) {
-    addText(`Wykonanie: ${formatDate(invoice.saleDate)}`, width - 100, 82, { size: 8, color: rgb(0.4, 0.4, 0.4) })
+    addText(`Wykonanie: ${formatDate(invoice.saleDate)}`, width - 150, 70, { size: 8, color: rgb(0.4, 0.4, 0.4) })
   }
   
   // Seller section
@@ -650,8 +649,7 @@ function generateModernTemplate(page: any, invoice: any, settings: any, helpers:
   
   // Modern header
   const headerX = logoRenderedWidth > 0 ? 50 + logoRenderedWidth + 20 : 50
-  addText('FAKTURA', headerX, 50, { size: 22, color: rgb(0, 0, 0) })
-  addText(`NR ${invoice.number}`, headerX, 75, { size: 12, color: rgb(0.4, 0.4, 0.4) })
+  addText(`FAKTURA ${invoice.number}`, headerX, 50, { size: 14, color: rgb(0, 0, 0) })
   addText(formatDate(invoice.issueDate), width - 150, 50, { size: 11, color: rgb(0.4, 0.4, 0.4) })
   
   // Company info
