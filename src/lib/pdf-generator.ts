@@ -514,7 +514,7 @@ function generateClassicTemplate(page: any, invoice: any, settings: any, helpers
   }
   
   // Total amount - bigger and more prominent
-  addText(`RAZEM DO ZAPLATY:`, 50, vatTableY + 140, { size: 12, color: rgb(0, 0, 0) })
+  addText(`SUMA:`, 50, vatTableY + 140, { size: 12, color: rgb(0, 0, 0) })
   addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, 50, vatTableY + 160, { size: 16, color: rgb(0, 0, 0) })
   addLine(50, vatTableY + 170, 280, vatTableY + 170, 2, rgb(0, 0, 0))
 }
@@ -612,8 +612,8 @@ function generateProfessionalTemplate(page: any, invoice: any, settings: any, he
   addText(parseFloat(invoice.totalVat).toFixed(2), 80, vatTableY + 28, { size: 7 })
   
   // Total amount
-  addText('NALEZNOSCI RAZEM', 200, vatTableY + 10, { size: 10, color: rgb(0, 0, 0) })
-  addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, width - 100, vatTableY + 10, { size: 14, color: rgb(0, 0, 0) })
+  addText('SUMA', 200, vatTableY + 10, { size: 10, color: rgb(0, 0, 0) })
+  addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, width - 150, vatTableY + 10, { size: 14, color: rgb(0, 0, 0) })
   
   if (invoice.paymentMethod) {
     addText(`metoda platnosci: ${invoice.paymentMethod}`, 200, vatTableY + 25, { size: 8, color: rgb(0.4, 0.4, 0.4) })
@@ -720,8 +720,8 @@ function generateModernTemplate(page: any, invoice: any, settings: any, helpers:
   addLine(50, currentY, width - 50, currentY, 1, rgb(0.85, 0.85, 0.85))
   
   // Total
-  addText('SUMA KONCOWA:', width/2 - 30, currentY + 25, { size: 12, color: rgb(0.1, 0.1, 0.1) })
-  addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, width - 80, currentY + 25, { size: 16, color: rgb(0, 0, 0) })
+  addText('SUMA:', 50, currentY + 25, { size: 12, color: rgb(0.1, 0.1, 0.1) })
+  addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, width - 150, currentY + 25, { size: 16, color: rgb(0, 0, 0) })
   
   // Payment info
   if (invoice.dueDate) {
