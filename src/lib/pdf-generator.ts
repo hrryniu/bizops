@@ -283,6 +283,44 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: 
     })
   }
   
+  // Helper function to wrap text to multiple lines
+  const wrapText = (text: string, maxWidth: number, fontSize: number = 10): string[] => {
+    const words = text.split(' ')
+    const lines: string[] = []
+    let currentLine = ''
+    
+    words.forEach(word => {
+      const testLine = currentLine ? `${currentLine} ${word}` : word
+      const testWidth = font.widthOfTextAtSize(testLine, fontSize)
+      
+      if (testWidth > maxWidth && currentLine) {
+        lines.push(currentLine)
+        currentLine = word
+      } else {
+        currentLine = testLine
+      }
+    })
+    
+    if (currentLine) {
+      lines.push(currentLine)
+    }
+    
+    return lines
+  }
+  
+  // Helper function to add wrapped text
+  const addWrappedText = (text: string, x: number, y: number, maxWidth: number, options: any = {}) => {
+    const fontSize = options.size || 10
+    const lineHeight = fontSize * 1.3
+    const lines = wrapText(text, maxWidth, fontSize)
+    
+    lines.forEach((line, index) => {
+      addText(line, x, y + (index * lineHeight), options)
+    })
+    
+    return lines.length * lineHeight // Return total height used
+  }
+  
   // Helper function to add line
   const addLine = (x1: number, y1: number, x2: number, y2: number, thickness: number = 1, color: any = rgb(0.8, 0.8, 0.8)) => {
     page.drawLine({
@@ -323,19 +361,19 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: 
   // Generate based on template
   switch (template) {
     case 'classic':
-      generateClassicTemplate(page, invoice, settings, { addText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
+      generateClassicTemplate(page, invoice, settings, { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
       break
     case 'professional':
-      generateProfessionalTemplate(page, invoice, settings, { addText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
+      generateProfessionalTemplate(page, invoice, settings, { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
       break
     case 'modern':
-      generateModernTemplate(page, invoice, settings, { addText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
+      generateModernTemplate(page, invoice, settings, { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
       break
     case 'minimal':
-      generateMinimalTemplate(page, invoice, settings, { addText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
+      generateMinimalTemplate(page, invoice, settings, { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
       break
     default:
-      generateClassicTemplate(page, invoice, settings, { addText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
+      generateClassicTemplate(page, invoice, settings, { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
   }
   
   // Serialize the PDF

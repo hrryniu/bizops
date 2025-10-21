@@ -36,7 +36,7 @@ npm run dev
 ## 📧 Dane logowania
 
 **Domyślne konto:**
-- Email: `admin@bizops.pl`
+- Email: `admin@bizops.local`
 - Hasło: `admin123`
 
 ## 🌐 Dostęp do aplikacji

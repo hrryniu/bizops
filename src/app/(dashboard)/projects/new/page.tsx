@@ -49,14 +49,23 @@ export default function NewProjectPage() {
     setLoading(true)
 
     try {
+      const payload: any = {
+        name: formData.name,
+        slug: formData.slug,
+        icon: formData.icon,
+        color: formData.color,
+        priority: parseInt(formData.priority),
+      }
+      
+      // Only include optional fields if they have values
+      if (formData.description) payload.description = formData.description
+      if (formData.deadline) payload.deadline = new Date(formData.deadline).toISOString()
+      if (formData.notesMd) payload.notesMd = formData.notesMd
+      
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
-          priority: parseInt(formData.priority),
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (response.ok) {
@@ -67,12 +76,26 @@ export default function NewProjectPage() {
         })
         router.push(`/projects/${project.slug}`)
       } else {
-        throw new Error()
+        const errorData = await response.json()
+        console.error('API Error:', errorData)
+        
+        // Format error message properly
+        let errorMessage = 'Nie udało się utworzyć projektu'
+        if (typeof errorData.error === 'string') {
+          errorMessage = errorData.error
+        } else if (Array.isArray(errorData.error)) {
+          errorMessage = errorData.error.map((e: any) => e.message).join(', ')
+        } else if (errorData.details) {
+          errorMessage = errorData.details
+        }
+        
+        throw new Error(errorMessage)
       }
     } catch (error) {
+      console.error('Error creating project:', error)
       toast({
         title: 'Błąd',
-        description: 'Nie udało się utworzyć projektu',
+        description: error instanceof Error ? error.message : 'Nie udało się utworzyć projektu',
         variant: 'destructive',
       })
     } finally {
