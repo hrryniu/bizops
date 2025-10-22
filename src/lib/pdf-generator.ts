@@ -172,7 +172,7 @@ type InvoiceWithDetails = {
   }
 }
 
-export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: string = 'classic') {
+export async function generateInvoicePDF(invoice: InvoiceWithDetails) {
   const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib')
   const fs = await import('fs')
   const path = await import('path')
@@ -245,8 +245,8 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: 
       }
       
       if (logoImage) {
-        // Calculate dimensions (max height 80px, maintain aspect ratio)
-        const maxHeight = 80
+        // Calculate dimensions (max height 120px, maintain aspect ratio)
+        const maxHeight = 120
         const aspectRatio = logoImage.width / logoImage.height
         logoHeight = maxHeight
         logoWidth = maxHeight * aspectRatio
@@ -264,14 +264,19 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: 
   
   // Helper function to add text with proper encoding
   const addText = (text: string, x: number, y: number, options: any = {}) => {
-    // Replace Polish characters with ASCII equivalents for compatibility
+    // Replace Polish characters with ASCII equivalents for compatibility and remove newlines
     const asciiText = text
+      .replace(/\n/g, ' ')  // Replace newlines with spaces
+      .replace(/\r/g, ' ')  // Replace carriage returns with spaces
+      .replace(/\t/g, ' ')  // Replace tabs with spaces
       .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l')
       .replace(/ń/g, 'n').replace(/ó/g, 'o').replace(/ś/g, 's').replace(/ź/g, 'z')
       .replace(/ż/g, 'z')
       .replace(/Ą/g, 'A').replace(/Ć/g, 'C').replace(/Ę/g, 'E').replace(/Ł/g, 'L')
       .replace(/Ń/g, 'N').replace(/Ó/g, 'O').replace(/Ś/g, 'S').replace(/Ź/g, 'Z')
       .replace(/Ż/g, 'Z')
+      .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+      .trim()
     
     page.drawText(asciiText, {
       x,
@@ -285,14 +290,19 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: 
   
   // Helper function to wrap text to multiple lines
   const wrapText = (text: string, maxWidth: number, fontSize: number = 10): string[] => {
-    // Convert to ASCII first (same as addText function)
+    // Convert to ASCII first and remove newlines (same as addText function)
     const asciiText = text
+      .replace(/\n/g, ' ')  // Replace newlines with spaces
+      .replace(/\r/g, ' ')  // Replace carriage returns with spaces
+      .replace(/\t/g, ' ')  // Replace tabs with spaces
       .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l')
       .replace(/ń/g, 'n').replace(/ó/g, 'o').replace(/ś/g, 's').replace(/ź/g, 'z')
       .replace(/ż/g, 'z')
       .replace(/Ą/g, 'A').replace(/Ć/g, 'C').replace(/Ę/g, 'E').replace(/Ł/g, 'L')
       .replace(/Ń/g, 'N').replace(/Ó/g, 'O').replace(/Ś/g, 'S').replace(/Ź/g, 'Z')
       .replace(/Ż/g, 'Z')
+      .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+      .trim()
     
     const words = asciiText.split(' ')
     const lines: string[] = []
@@ -367,434 +377,186 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails, template: 
     return 0
   }
   
-  // Generate based on template
-  switch (template) {
-    case 'classic':
-      generateClassicTemplate(page, invoice, settings, { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
-      break
-    case 'professional':
-      generateProfessionalTemplate(page, invoice, settings, { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
-      break
-    case 'modern':
-      generateModernTemplate(page, invoice, settings, { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
-      break
-    case 'minimal':
-      generateMinimalTemplate(page, invoice, settings, { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
-      break
-    default:
-      generateClassicTemplate(page, invoice, settings, { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
-  }
+  // Generate invoice template
+  generateInvoiceTemplate(page, invoice, settings, { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, font, logoWidth, logoHeight })
   
   // Serialize the PDF
   const pdfBytes = await pdfDoc.save()
   return Buffer.from(pdfBytes)
 }
 
-// Classic template inspired by afaktury.pl
-function generateClassicTemplate(page: any, invoice: any, settings: any, helpers: any) {
-  const { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, logoWidth } = helpers
+// Professional invoice template based on JIMBO MEDIA design
+function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers: any) {
+  const { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, logoWidth, logoHeight } = helpers
   
-  // Logo area
-  const logoRenderedWidth = addLogo(50, 50)
+  // === SECTION 1: LOGO (Top-Left) ===
+  const logoRenderedWidth = addLogo(40, 40)
   
-  // If no logo, show placeholder text
-  if (!logoRenderedWidth && settings?.companyName) {
-    addWrappedText(settings.companyName, 50, 50, 200, { size: 12, color: rgb(0, 0.4, 0.8) })
-  }
+  // === SECTION 2: SELLER INFO ("Sprzedawca") - Left Side ===
+  let sellerY = logoHeight + 50
+  addText('Sprzedawca', 50, sellerY, { size: 11, color: rgb(0, 0, 0) })
+  addLine(50, sellerY + 6, 150, sellerY + 6, 1, rgb(0, 0, 0))
+  sellerY += 18
   
-  // Dates in top right
-  addText(`Data wystawienia: ${formatDate(invoice.issueDate)}`, width - 180, 50, { size: 10 })
-  if (invoice.saleDate) {
-    addText(`Data sprzedazy: ${formatDate(invoice.saleDate)}`, width - 180, 65, { size: 10 })
-  }
-  
-  // Invoice number with underline
-  addText(`Faktura nr: ${invoice.number}`, 50, 100, { size: 14, color: rgb(0, 0, 0) })
-  addLine(50, 110, 250, 110, 2, rgb(0, 0, 0))
-  
-  // Seller and buyer sections
-  addText('Sprzedawca', 50, 135, { size: 11, color: rgb(0, 0, 0) })
-  addLine(50, 141, 150, 141, 1, rgb(0, 0, 0))
-  
-  let sellerY = 155
   if (settings) {
-    addWrappedText(settings.companyName || 'Nazwa firmy', 50, sellerY, 230, { size: 10 })
-    sellerY += 15
+    addWrappedText(settings.companyName || 'Nazwa firmy', 50, sellerY, 220, { size: 10, color: rgb(0, 0, 0) })
+    sellerY += 16
     if (settings.companyAddress) {
-      const addressHeight = addWrappedText(settings.companyAddress, 50, sellerY, 230, { size: 10 })
+      const addressHeight = addWrappedText(settings.companyAddress, 50, sellerY, 220, { size: 9 })
       sellerY += addressHeight + 3
     }
     if (settings.companyNIP) {
-      addText(`NIP: ${settings.companyNIP}`, 50, sellerY, { size: 10 })
-      sellerY += 13
+      addText(`NIP: ${settings.companyNIP}`, 50, sellerY, { size: 9 })
+      sellerY += 14
     }
-    if (settings.companyBankAccount) {
-      const bankHeight = addWrappedText(`Nr konta: ${settings.companyBankAccount}`, 50, sellerY, 230, { size: 9 })
-      sellerY += bankHeight
-    }
+    // Email/website można dodać jeśli dostępne
   }
   
-  // Vertical line separator
-  const separatorHeight = Math.max(sellerY + 10, 210)
-  addLine(300, 130, 300, separatorHeight, 1, rgb(0, 0, 0))
+  // === SECTION 3: INVOICE TITLE & NUMBER (Top-Right, Centered) ===
+  const invoiceTitleX = width - 180
+  let titleY = 50
+  addText('Faktura', invoiceTitleX, titleY, { size: 16, color: rgb(0, 0, 0) })
+  titleY += 20
+  addText(`nr: ${invoice.number}`, invoiceTitleX, titleY, { size: 13, color: rgb(0.2, 0.2, 0.2) })
   
-  // Buyer section
-  addText('Nabywca', 310, 135, { size: 11, color: rgb(0, 0, 0) })
-  addLine(310, 141, 450, 141, 1, rgb(0, 0, 0))
+  // === SECTION 4: DATES (Right Side, Below Title) ===
+  let dateY = titleY + 30
+  addText(`Wystawiona w dniu:`, invoiceTitleX - 30, dateY, { size: 9, color: rgb(0.3, 0.3, 0.3) })
+  dateY += 14
+  addText(formatDate(invoice.issueDate), invoiceTitleX - 30, dateY, { size: 9 })
   
-  let buyerY = 155
-  if (invoice.buyerPrivatePerson) {
-    addWrappedText(invoice.buyerPrivatePerson, 310, buyerY, 230, { size: 10 })
-    buyerY += 15
-    addText('Osoba prywatna', 310, buyerY, { size: 10 })
-  } else if (invoice.buyer) {
-    addWrappedText(invoice.buyer.name, 310, buyerY, 230, { size: 10 })
-    buyerY += 15
-    if (invoice.buyer.nip) {
-      addText(`NIP: ${invoice.buyer.nip}`, 310, buyerY, { size: 10 })
-      buyerY += 13
-    }
-    if (invoice.buyer.address) {
-      addWrappedText(invoice.buyer.address, 310, buyerY, 230, { size: 10 })
-    }
-  }
-  
-  // Items table - dynamically positioned after buyer section
-  const tableY = Math.max(separatorHeight + 20, 230)
-  addRect(50, tableY, width - 100, 25, { color: rgb(0.95, 0.95, 0.95) })
-  
-  addText('Lp.', 60, tableY + 15, { size: 10 })
-  addText('Nazwa towaru/uslugi', 90, tableY + 15, { size: 10 })
-  addText('Ilosc', 280, tableY + 15, { size: 10 })
-  addText('Cena netto', 330, tableY + 15, { size: 10 })
-  addText('VAT', 400, tableY + 15, { size: 10 })
-  addText('Brutto', 450, tableY + 15, { size: 10 })
-  
-  addLine(50, tableY + 25, width - 50, tableY + 25, 1, rgb(0.8, 0.8, 0.8))
-  
-  // Table rows with word wrapping for long item names
-  let currentY = tableY + 43
-  invoice.items.forEach((item: any, index: number) => {
-    const itemStartY = currentY
-    addText((index + 1).toString(), 60, currentY, { size: 10 })
-    
-    // Wrap item name if too long
-    const nameHeight = addWrappedText(item.name, 90, currentY, 175, { size: 10 })
-    
-    addText(`${item.quantity} ${item.unit || ''}`, 280, itemStartY, { size: 10 })
-    addText(parseFloat(item.netPrice).toFixed(2), 330, itemStartY, { size: 10 })
-    addText(`${item.vatRate}%`, 400, itemStartY, { size: 10 })
-    addText(parseFloat(item.lineGross).toFixed(2), 450, itemStartY, { size: 10 })
-    
-    currentY += Math.max(nameHeight, 15) + 3
-  })
-  
-  addLine(50, currentY, width - 50, currentY, 1, rgb(0.6, 0.6, 0.6))
-  
-  // VAT summary table
-  const vatTableY = currentY + 15
-  addRect(50, vatTableY, 200, 60, { borderWidth: 1, borderColor: rgb(0.6, 0.6, 0.6) })
-  
-  addText('Stawka VAT', 60, vatTableY + 12, { size: 10 })
-  addText('Netto', 60, vatTableY + 28, { size: 10 })
-  addText('VAT', 60, vatTableY + 44, { size: 10 })
-  addText('Brutto', 60, vatTableY + 60, { size: 10 })
-  
-  addText('23%', 140, vatTableY + 12, { size: 10 })
-  addText(parseFloat(invoice.totalNet).toFixed(2), 140, vatTableY + 28, { size: 10 })
-  addText(parseFloat(invoice.totalVat).toFixed(2), 140, vatTableY + 44, { size: 10 })
-  addText(parseFloat(invoice.totalGross).toFixed(2), 140, vatTableY + 60, { size: 10 })
-  
-  // Payment info
-  if (invoice.paymentMethod) {
-    addText(`Sposob zaplaty: ${invoice.paymentMethod}`, 50, vatTableY + 90, { size: 10 })
-  }
-  if (invoice.dueDate) {
-    addText(`Termin zaplaty: ${formatDate(invoice.dueDate)}`, 50, vatTableY + 108, { size: 10 })
-  }
-  
-  // Total amount - bigger and more prominent
-  addText(`SUMA:`, 50, vatTableY + 140, { size: 12, color: rgb(0, 0, 0) })
-  addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, 50, vatTableY + 160, { size: 16, color: rgb(0, 0, 0) })
-  addLine(50, vatTableY + 170, 280, vatTableY + 170, 2, rgb(0, 0, 0))
-}
-
-// Professional template inspired by CargoLink
-function generateProfessionalTemplate(page: any, invoice: any, settings: any, helpers: any) {
-  const { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, logoWidth } = helpers
-  
-  // Logo area
-  const logoRenderedWidth = addLogo(50, 30)
-  
-  // If no logo, show placeholder with company name
-  if (!logoRenderedWidth && settings?.companyName) {
-    addRect(50, 30, 15, 15, { color: rgb(0, 0.4, 0.8) })
-    addText(settings.companyName.charAt(0), 57, 40, { size: 10, color: rgb(1, 1, 1) })
-    addText(settings.companyName, 70, 40, { size: 12, color: rgb(0, 0.4, 0.8) })
-  }
-  
-  // Invoice header
-  addText(`FAKTURA ${invoice.number}`, width - 150, 40, { size: 14, color: rgb(0, 0, 0) })
-  addText(`Wystawienie: ${formatDate(invoice.issueDate)}`, width - 150, 58, { size: 8, color: rgb(0.4, 0.4, 0.4) })
   if (invoice.saleDate) {
-    addText(`Wykonanie: ${formatDate(invoice.saleDate)}`, width - 150, 70, { size: 8, color: rgb(0.4, 0.4, 0.4) })
+    dateY += 18
+    addText(`Data zakonczenia dostawy/uslugi:`, invoiceTitleX - 30, dateY, { size: 8, color: rgb(0.3, 0.3, 0.3) })
+    dateY += 14
+    addText(formatDate(invoice.saleDate), invoiceTitleX - 30, dateY, { size: 9 })
   }
   
-  // Seller section
-  addText('SPRZEDAWCA', 50, 100, { size: 10, color: rgb(0, 0, 0) })
-  if (settings) {
-    addText(settings.companyName || 'Nazwa firmy', 50, 115, { size: 10, color: rgb(0, 0, 0) })
-    if (settings.companyAddress) {
-      addText(settings.companyAddress, 50, 130, { size: 9, color: rgb(0.4, 0.4, 0.4) })
-    }
-    if (settings.companyNIP) {
-      addText(`NIP: ${settings.companyNIP}`, 50, 145, { size: 9, color: rgb(0.4, 0.4, 0.4) })
-    }
-  }
+  // === SECTION 5: BUYER INFO ("Nabywca") - Right Side ===
+  let buyerY = dateY + 25
+  addText('Nabywca', invoiceTitleX - 30, buyerY, { size: 11, color: rgb(0, 0, 0) })
+  addLine(invoiceTitleX - 30, buyerY + 6, invoiceTitleX + 90, buyerY + 6, 1, rgb(0, 0, 0))
+  buyerY += 18
   
-  // Buyer section
-  addText('NABYWCA', 300, 100, { size: 10, color: rgb(0, 0, 0) })
   if (invoice.buyerPrivatePerson) {
-    addText(invoice.buyerPrivatePerson, 300, 115, { size: 10, color: rgb(0, 0, 0) })
-    addText('Osoba prywatna', 300, 130, { size: 9, color: rgb(0.4, 0.4, 0.4) })
+    addWrappedText(invoice.buyerPrivatePerson, invoiceTitleX - 30, buyerY, 200, { size: 10, color: rgb(0, 0, 0) })
+    buyerY += 16
+    addText('Osoba prywatna', invoiceTitleX - 30, buyerY, { size: 9, color: rgb(0.4, 0.4, 0.4) })
   } else if (invoice.buyer) {
-    addText(invoice.buyer.name, 300, 115, { size: 10, color: rgb(0, 0, 0) })
-    if (invoice.buyer.nip) {
-      addText(`NIP: ${invoice.buyer.nip}`, 300, 130, { size: 9, color: rgb(0.4, 0.4, 0.4) })
-    }
+    addWrappedText(invoice.buyer.name, invoiceTitleX - 30, buyerY, 200, { size: 10, color: rgb(0, 0, 0) })
+    buyerY += 16
     if (invoice.buyer.address) {
-      addText(invoice.buyer.address, 300, 145, { size: 9, color: rgb(0.4, 0.4, 0.4) })
+      const addressHeight = addWrappedText(invoice.buyer.address, invoiceTitleX - 30, buyerY, 200, { size: 9 })
+      buyerY += addressHeight + 3
+    }
+    if (invoice.buyer.nip) {
+      addText(`NIP: ${invoice.buyer.nip}`, invoiceTitleX - 30, buyerY, { size: 9 })
+      buyerY += 14
     }
   }
   
-  // Reference numbers
-  addText('sprzedawca nr ref.: REF001, REF002', 50, 170, { size: 8, color: rgb(0.4, 0.4, 0.4) })
-  addText('nabywca nr ref.: CLIENT001', 50, 182, { size: 8, color: rgb(0.4, 0.4, 0.4) })
+  // === SECTION 6: PAYMENT METHOD (Left Side) ===
+  const paymentY = sellerY + 20
+  if (invoice.paymentMethod) {
+    addText('Sposob zaplaty:', 50, paymentY, { size: 9, color: rgb(0.3, 0.3, 0.3) })
+    addText(invoice.paymentMethod, 50, paymentY + 14, { size: 10, color: rgb(0, 0, 0) })
+  }
   
-  // Items table
-  const tableY = 200
-  addRect(50, tableY, width - 100, 15, { color: rgb(0.95, 0.95, 0.95) })
+  // === SECTION 7: ITEMS TABLE ===
+  const tableStartY = Math.max(buyerY, paymentY) + 40
   
-  addText('#', 60, tableY + 10, { size: 8 })
-  addText('Nazwa', 80, tableY + 10, { size: 8 })
-  addText('Cena netto', 200, tableY + 10, { size: 8 })
-  addText('Ilosc', 280, tableY + 10, { size: 8 })
-  addText('j.m.', 320, tableY + 10, { size: 8 })
-  addText('Razem', 380, tableY + 10, { size: 8 })
+  // Table header with 9 columns
+  const col1X = 50   // Lp.
+  const col2X = 75   // Nazwa
+  const col3X = 250  // J.m.
+  const col4X = 285  // Ilość
+  const col5X = 325  // Cena netto
+  const col6X = 385  // Wartość netto
+  const col7X = 450  // VAT %
+  const col8X = 490  // Kwota VAT
+  const col9X = 530  // Wartość brutto (right-aligned)
   
-  addLine(50, tableY + 15, width - 50, tableY + 15, 0.5, rgb(0.8, 0.8, 0.8))
+  // Header background
+  addRect(col1X, tableStartY, width - 100, 18, { color: rgb(0.9, 0.9, 0.9) })
+  addLine(col1X, tableStartY, width - 50, tableStartY, 1, rgb(0, 0, 0))
+  addLine(col1X, tableStartY + 18, width - 50, tableStartY + 18, 1, rgb(0, 0, 0))
+  
+  // Header text
+  let headerY = tableStartY + 12
+  addText('Lp.', col1X + 5, headerY, { size: 8, color: rgb(0, 0, 0) })
+  addText('Nazwa towaru lub uslugi', col2X, headerY, { size: 8, color: rgb(0, 0, 0) })
+  addText('J.m.', col3X, headerY, { size: 8, color: rgb(0, 0, 0) })
+  addText('Ilosc', col4X, headerY, { size: 8, color: rgb(0, 0, 0) })
+  addText('Cena netto', col5X, headerY, { size: 8, color: rgb(0, 0, 0) })
+  addText('Wartosc netto', col6X, headerY, { size: 8, color: rgb(0, 0, 0) })
+  addText('VAT %', col7X, headerY, { size: 8, color: rgb(0, 0, 0) })
+  addText('Kwota VAT', col8X, headerY, { size: 8, color: rgb(0, 0, 0) })
+  addText('Brutto', col9X - 10, headerY, { size: 8, color: rgb(0, 0, 0) })
   
   // Table rows
-  let currentY = tableY + 30
+  let currentRowY = tableStartY + 32
   invoice.items.forEach((item: any, index: number) => {
-    addText((index + 1).toString(), 60, currentY, { size: 8 })
-    addText(item.name, 80, currentY, { size: 8 })
-    addText(parseFloat(item.netPrice).toFixed(2), 200, currentY, { size: 8 })
-    addText(item.quantity.toString(), 280, currentY, { size: 8 })
-    addText(item.unit || 'szt', 320, currentY, { size: 8 })
-    addText(parseFloat(item.lineGross).toFixed(2), 380, currentY, { size: 8 })
-    currentY += 15
+    const rowHeight = 16
+    
+    // Row data
+    addText((index + 1).toString(), col1X + 5, currentRowY, { size: 9 })
+    addWrappedText(item.name, col2X, currentRowY, 165, { size: 9 })
+    addText(item.unit || 'szt.', col3X, currentRowY, { size: 9 })
+    addText(item.quantity.toString(), col4X, currentRowY, { size: 9 })
+    addText(parseFloat(item.netPrice).toFixed(2), col5X, currentRowY, { size: 9 })
+    addText(parseFloat(item.lineNet).toFixed(2), col6X, currentRowY, { size: 9 })
+    addText(`${item.vatRate}%`, col7X, currentRowY, { size: 9 })
+    addText(parseFloat(item.lineVat).toFixed(2), col8X, currentRowY, { size: 9 })
+    addText(parseFloat(item.lineGross).toFixed(2), col9X - 10, currentRowY, { size: 9 })
+    
+    currentRowY += rowHeight
+    addLine(col1X, currentRowY - 2, width - 50, currentRowY - 2, 0.5, rgb(0.7, 0.7, 0.7))
   })
   
-  addLine(50, currentY - 5, width - 50, currentY - 5, 0.5, rgb(0.8, 0.8, 0.8))
+  // === SECTION 8: TOTALS ===
+  const totalsY = currentRowY + 15
   
-  // VAT summary
-  const vatTableY = currentY + 10
-  addRect(50, vatTableY, 100, 30, { borderWidth: 0.5 })
+  // Total row
+  addText('Razem', col2X, totalsY, { size: 10, color: rgb(0, 0, 0) })
+  addText(parseFloat(invoice.totalNet).toFixed(2), col6X, totalsY, { size: 10, color: rgb(0, 0, 0) })
+  addText(parseFloat(invoice.totalVat).toFixed(2), col8X, totalsY, { size: 10, color: rgb(0, 0, 0) })
+  addText(parseFloat(invoice.totalGross).toFixed(2), col9X - 10, totalsY, { size: 10, color: rgb(0, 0, 0) })
   
-  addText('netto', 55, vatTableY + 8, { size: 7 })
-  addText('%', 55, vatTableY + 18, { size: 7 })
-  addText('VAT', 55, vatTableY + 28, { size: 7 })
+  // VAT breakdown row (W tym)
+  const breakdownY = totalsY + 18
+  addText('W tym', col2X, breakdownY, { size: 9, color: rgb(0.3, 0.3, 0.3) })
+  addText(parseFloat(invoice.totalNet).toFixed(2), col6X, breakdownY, { size: 9 })
+  // Assuming all items have 23% VAT for simplicity
+  addText('23%', col7X, breakdownY, { size: 9 })
+  addText(parseFloat(invoice.totalVat).toFixed(2), col8X, breakdownY, { size: 9 })
+  addText(parseFloat(invoice.totalGross).toFixed(2), col9X - 10, breakdownY, { size: 9 })
   
-  addText(parseFloat(invoice.totalNet).toFixed(2), 80, vatTableY + 8, { size: 7 })
-  addText('23.00%', 80, vatTableY + 18, { size: 7 })
-  addText(parseFloat(invoice.totalVat).toFixed(2), 80, vatTableY + 28, { size: 7 })
+  // === SECTION 9: TOTAL AMOUNT DUE ===
+  const amountDueY = breakdownY + 30
+  addText('Razem do zaplaty:', 50, amountDueY, { size: 12, color: rgb(0, 0, 0) })
+  addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, 180, amountDueY, { size: 14, color: rgb(0, 0, 0) })
   
-  // Total amount
-  addText('SUMA', 200, vatTableY + 10, { size: 10, color: rgb(0, 0, 0) })
-  addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, width - 150, vatTableY + 10, { size: 14, color: rgb(0, 0, 0) })
+  // Amount in words (słownie)
+  const amountInWordsY = amountDueY + 20
+  addText('Slownie zlotych:', 50, amountInWordsY, { size: 9, color: rgb(0.3, 0.3, 0.3) })
+  // Simple conversion - można ulepszyć
+  addText(`(${parseFloat(invoice.totalGross).toFixed(2)} PLN)`, 50, amountInWordsY + 14, { size: 9 })
   
-  if (invoice.paymentMethod) {
-    addText(`metoda platnosci: ${invoice.paymentMethod}`, 200, vatTableY + 25, { size: 8, color: rgb(0.4, 0.4, 0.4) })
-  }
-  if (invoice.dueDate) {
-    addText(`termin platnosci: ${formatDate(invoice.dueDate)}`, 200, vatTableY + 37, { size: 8, color: rgb(0.4, 0.4, 0.4) })
-  }
-  
-  // Bank account
-  addText('KONTA BANKOWE', 50, vatTableY + 60, { size: 9, color: rgb(0, 0, 0) })
-  if (settings?.companyBankAccount) {
-    addText(`PLN: ${settings.companyBankAccount}`, 50, vatTableY + 75, { size: 8, color: rgb(0.4, 0.4, 0.4) })
-  }
-  
-  // Notes
+  // === SECTION 10: NOTES ===
+  const notesY = amountInWordsY + 40
   if (invoice.notes) {
-    addText('UWAGI', 50, vatTableY + 100, { size: 9, color: rgb(0, 0, 0) })
-    addText(invoice.notes, 50, vatTableY + 115, { size: 8, color: rgb(0.8, 0, 0) })
+    addText('Uwagi:', 50, notesY, { size: 9, color: rgb(0, 0, 0) })
+    addWrappedText(invoice.notes, 50, notesY + 14, width - 100, { size: 8, color: rgb(0.3, 0.3, 0.3) })
   }
   
-  // Signature lines
-  addLine(50, vatTableY + 150, 150, vatTableY + 150, 1, rgb(0.6, 0.6, 0.6))
-  addLine(200, vatTableY + 150, 300, vatTableY + 150, 1, rgb(0.6, 0.6, 0.6))
-  addText('podpis sprzedawcy', 50, vatTableY + 160, { size: 7, color: rgb(0.4, 0.4, 0.4) })
-  addText('podpis nabywcy', 200, vatTableY + 160, { size: 7, color: rgb(0.4, 0.4, 0.4) })
-}
-
-// Modern template (existing)
-function generateModernTemplate(page: any, invoice: any, settings: any, helpers: any) {
-  const { addText, addWrappedText, addLine, addRect, addLogo, width, height, rgb, logoWidth } = helpers
+  // === SECTION 11: SIGNATURE LINES ===
+  const signatureY = height - 100
+  addLine(50, signatureY, 200, signatureY, 1, rgb(0.5, 0.5, 0.5))
+  addLine(width - 250, signatureY, width - 50, signatureY, 1, rgb(0.5, 0.5, 0.5))
   
-  // Logo at the top
-  const logoRenderedWidth = addLogo(50, 40)
+  addText('podpis osoby upowaznionej', 50, signatureY + 10, { size: 7, color: rgb(0.4, 0.4, 0.4) })
+  addText('do odbioru faktury', 50, signatureY + 18, { size: 7, color: rgb(0.4, 0.4, 0.4) })
   
-  // Modern header
-  const headerX = logoRenderedWidth > 0 ? 50 + logoRenderedWidth + 20 : 50
-  addText(`FAKTURA ${invoice.number}`, headerX, 50, { size: 14, color: rgb(0, 0, 0) })
-  addText(formatDate(invoice.issueDate), width - 150, 50, { size: 11, color: rgb(0.4, 0.4, 0.4) })
-  
-  // Company info
-  addText('WYSTAWCA', 50, 110, { size: 10, color: rgb(0.5, 0.5, 0.5) })
-  let sellerY = 128
-  if (settings) {
-    addWrappedText(settings.companyName || 'Nazwa firmy', 50, sellerY, 240, { size: 11, color: rgb(0.1, 0.1, 0.1) })
-    sellerY += 18
-    if (settings.companyAddress) {
-      const addressHeight = addWrappedText(settings.companyAddress, 50, sellerY, 240, { size: 10, color: rgb(0.3, 0.3, 0.3) })
-      sellerY += addressHeight + 3
-    }
-    if (settings.companyNIP) {
-      addText(`NIP: ${settings.companyNIP}`, 50, sellerY, { size: 10, color: rgb(0.3, 0.3, 0.3) })
-      sellerY += 15
-    }
-  }
-  
-  // Buyer info
-  addText('ODBIORCA', 310, 110, { size: 10, color: rgb(0.5, 0.5, 0.5) })
-  let buyerY = 128
-  if (invoice.buyerPrivatePerson) {
-    addWrappedText(invoice.buyerPrivatePerson, 310, buyerY, 230, { size: 11, color: rgb(0.1, 0.1, 0.1) })
-    buyerY += 18
-    addText('Osoba prywatna', 310, buyerY, { size: 10, color: rgb(0.3, 0.3, 0.3) })
-  } else if (invoice.buyer) {
-    addWrappedText(invoice.buyer.name, 310, buyerY, 230, { size: 11, color: rgb(0.1, 0.1, 0.1) })
-    buyerY += 18
-    if (invoice.buyer.address) {
-      addWrappedText(invoice.buyer.address, 310, buyerY, 230, { size: 10, color: rgb(0.3, 0.3, 0.3) })
-    }
-  }
-  
-  const lineY = Math.max(sellerY, buyerY) + 15
-  addLine(50, lineY, width - 50, lineY, 1, rgb(0.85, 0.85, 0.85))
-  
-  // Items table - dynamically positioned
-  const tableY = lineY + 20
-  addText('POZYCJA', 60, tableY, { size: 10, color: rgb(0.5, 0.5, 0.5) })
-  addText('NETTO', width - 200, tableY, { size: 10, color: rgb(0.5, 0.5, 0.5) })
-  addText('VAT', width - 120, tableY, { size: 10, color: rgb(0.5, 0.5, 0.5) })
-  addText('BRUTTO', width - 80, tableY, { size: 10, color: rgb(0.5, 0.5, 0.5) })
-  
-  // Table rows with word wrapping
-  let currentY = tableY + 22
-  invoice.items.forEach((item: any, index: number) => {
-    const itemStartY = currentY
-    
-    // Calculate item name height
-    const nameHeight = addWrappedText(item.name, 60, currentY, width - 290, { size: 10, color: rgb(0.1, 0.1, 0.1) })
-    const rowHeight = Math.max(nameHeight, 15)
-    
-    // Background color
-    const bgColor = index % 2 === 0 ? rgb(0.97, 0.97, 0.97) : rgb(1, 1, 1)
-    addRect(50, itemStartY - 5, width - 100, rowHeight + 5, { color: bgColor })
-    
-    // Re-draw text on top of background
-    addWrappedText(item.name, 60, currentY, width - 290, { size: 10, color: rgb(0.1, 0.1, 0.1) })
-    addText(parseFloat(item.lineNet).toFixed(2), width - 200, itemStartY, { size: 10, color: rgb(0.2, 0.2, 0.2) })
-    addText(parseFloat(item.lineVat).toFixed(2), width - 120, itemStartY, { size: 10, color: rgb(0.2, 0.2, 0.2) })
-    addText(parseFloat(item.lineGross).toFixed(2), width - 80, itemStartY, { size: 10, color: rgb(0.1, 0.1, 0.1) })
-    
-    currentY += rowHeight + 5
-  })
-  
-  addLine(50, currentY, width - 50, currentY, 1, rgb(0.85, 0.85, 0.85))
-  
-  // Total
-  addText('SUMA:', 50, currentY + 25, { size: 12, color: rgb(0.1, 0.1, 0.1) })
-  addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, width - 150, currentY + 25, { size: 16, color: rgb(0, 0, 0) })
-  
-  // Payment info
-  if (invoice.dueDate) {
-    addText(`Zaplac do: ${formatDate(invoice.dueDate)}`, 50, currentY + 55, { size: 10, color: rgb(0.5, 0.5, 0.5) })
-  }
-  if (invoice.paymentMethod) {
-    addText(`Forma platnosci: ${invoice.paymentMethod}`, 50, currentY + 73, { size: 10, color: rgb(0.5, 0.5, 0.5) })
-  }
-}
-
-// Minimal template (existing)
-function generateMinimalTemplate(page: any, invoice: any, settings: any, helpers: any) {
-  const { addText, addLine, addRect, addLogo, width, height, rgb, logoWidth } = helpers
-  
-  // Logo at the top if available
-  const logoRenderedWidth = addLogo(50, 30)
-  const startY = logoRenderedWidth > 0 ? 80 : 50
-  
-  // Minimal header
-  addText(`Faktura ${invoice.number}`, 50, startY, { size: 12, color: rgb(0.2, 0.2, 0.2) })
-  addText(`Data wystawienia: ${formatDate(invoice.issueDate)}`, 50, startY + 20, { size: 8, color: rgb(0.4, 0.4, 0.4) })
-  if (invoice.dueDate) {
-    addText(`Termin: ${formatDate(invoice.dueDate)}`, width - 100, startY + 20, { size: 8, color: rgb(0.4, 0.4, 0.4) })
-  }
-  
-  // Company info
-  const companyY = startY + 50
-  addText('Od:', 50, companyY, { size: 8, color: rgb(0.2, 0.2, 0.2) })
-  if (settings) {
-    addText(settings.companyName || 'Nazwa firmy', 50, companyY + 15, { size: 9, color: rgb(0.4, 0.4, 0.4) })
-    if (settings.companyAddress) {
-      addText(settings.companyAddress, 50, companyY + 30, { size: 8, color: rgb(0.4, 0.4, 0.4) })
-    }
-  }
-  
-  // Buyer info
-  addText('Dla:', 300, companyY, { size: 8, color: rgb(0.2, 0.2, 0.2) })
-  if (invoice.buyerPrivatePerson) {
-    addText(invoice.buyerPrivatePerson, 300, companyY + 15, { size: 9, color: rgb(0.4, 0.4, 0.4) })
-  } else if (invoice.buyer) {
-    addText(invoice.buyer.name, 300, companyY + 15, { size: 9, color: rgb(0.4, 0.4, 0.4) })
-    if (invoice.buyer.address) {
-      addText(invoice.buyer.address, 300, companyY + 30, { size: 8, color: rgb(0.4, 0.4, 0.4) })
-    }
-  }
-  
-  // Items table
-  const tableY = companyY + 60
-  addRect(50, tableY, width - 100, 12, { color: rgb(0.95, 0.95, 0.95) })
-  
-  addText('Opis', 60, tableY + 8, { size: 7 })
-  addText('Kwota', width - 100, tableY + 8, { size: 7 })
-  
-  // Table rows
-  let currentY = tableY + 20
-  invoice.items.forEach((item: any) => {
-    addText(item.name, 60, currentY, { size: 8, color: rgb(0.3, 0.3, 0.3) })
-    addText(parseFloat(item.lineGross).toFixed(2), width - 100, currentY, { size: 8, color: rgb(0.3, 0.3, 0.3) })
-    currentY += 12
-  })
-  
-  addLine(50, currentY - 5, width - 50, currentY - 5, 0.5, rgb(0.8, 0.8, 0.8))
-  
-  // Totals
-  addText('Suma netto:', 60, currentY + 15, { size: 8, color: rgb(0.2, 0.2, 0.2) })
-  addText(`${parseFloat(invoice.totalNet).toFixed(2)}`, width - 100, currentY + 15, { size: 8, color: rgb(0.2, 0.2, 0.2) })
-  
-  addText('VAT 23%:', 60, currentY + 30, { size: 8, color: rgb(0.2, 0.2, 0.2) })
-  addText(`${parseFloat(invoice.totalVat).toFixed(2)}`, width - 100, currentY + 30, { size: 8, color: rgb(0.2, 0.2, 0.2) })
-  
-  addText('Do zaplaty:', 60, currentY + 50, { size: 10, color: rgb(0, 0, 0) })
-  addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, width - 100, currentY + 50, { size: 10, color: rgb(0, 0, 0) })
-  
-  // Bank account
-  if (settings?.companyBankAccount) {
-    addText(`Numer konta: ${settings.companyBankAccount}`, 50, currentY + 80, { size: 7, color: rgb(0.6, 0.6, 0.6) })
-  }
+  addText('podpis osoby upowaznionej', width - 250, signatureY + 10, { size: 7, color: rgb(0.4, 0.4, 0.4) })
+  addText('do wystawienia faktury', width - 250, signatureY + 18, { size: 7, color: rgb(0.4, 0.4, 0.4) })
 }

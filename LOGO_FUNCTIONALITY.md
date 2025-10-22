@@ -156,3 +156,4 @@ Wszystkie komponenty zostały zaimplementowane i przetestowane. Logo firmy będz
 1. Logo zostało uploadowane w ustawieniach
 2. Opcja "Dodaj logo do wystawianych faktur" jest włączona
 
+

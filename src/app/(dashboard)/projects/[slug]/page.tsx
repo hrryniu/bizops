@@ -127,3 +127,4 @@ export default async function ProjectPage({ params }: { params: { slug: string }
   )
 }
 
+

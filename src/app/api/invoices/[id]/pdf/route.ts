@@ -31,8 +31,7 @@ export async function GET(
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
 
-    const template = invoice.user.settings?.invoiceTemplate || 'classic'
-    const pdfBuffer = await generateInvoicePDF(invoice, template)
+    const pdfBuffer = await generateInvoicePDF(invoice)
 
     return new NextResponse(pdfBuffer, {
       headers: {

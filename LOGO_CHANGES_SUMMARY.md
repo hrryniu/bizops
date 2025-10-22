@@ -149,3 +149,4 @@ Funkcjonalność logo na fakturach jest w pełni zaimplementowana i gotowa do u�
 Wszystkie testy powinny przejść poprawnie. Logo będzie automatycznie pojawiać się 
 na wszystkich generowanych fakturach PDF zgodnie z ustawieniami użytkownika.
 
+

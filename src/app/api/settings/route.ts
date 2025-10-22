@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
     } else if (type === 'invoice') {
       const invoiceData = {
         showLogoOnInvoices: data.showLogoOnInvoices,
-        invoiceTemplate: data.invoiceTemplate,
       }
       updateData = invoiceData
       createData = { ...createData, ...invoiceData }

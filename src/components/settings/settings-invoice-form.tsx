@@ -4,37 +4,19 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
-import { Save, FileText, Image as ImageIcon } from 'lucide-react'
-import { Card } from '@/components/ui/card'
+import { Save, Image as ImageIcon } from 'lucide-react'
 
 interface Settings {
   id?: string
   showLogoOnInvoices?: boolean
-  invoiceTemplate?: string
 }
 
 interface SettingsInvoiceFormProps {
   settings?: Settings | null
 }
 
-const INVOICE_TEMPLATES = [
-  {
-    id: 'classic',
-    name: 'Klasyczny',
-    description: 'Prosty i czytelny układ z wszystkimi najważniejszymi informacjami',
-    preview: 'data:image/svg+xml;utf8,<svg width="200" height="280" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="280" fill="%23ffffff"/><text x="20" y="20" font-family="Arial" font-size="8" fill="%2300a86b" font-weight="bold">a</text><text x="30" y="20" font-family="Arial" font-size="8" fill="%23000" font-weight="bold">faktury.pl</text><text x="180" y="20" font-family="Arial" font-size="6" fill="%23666" text-anchor="end">Data wystawienia: 2022-02-21</text><text x="180" y="28" font-family="Arial" font-size="6" fill="%23666" text-anchor="end">Data sprzedaży: 2022-02-21</text><text x="20" y="45" font-family="Arial" font-size="12" fill="%23000" font-weight="bold">Faktura nr: 3/02-2022</text><line x1="20" y1="50" x2="180" y2="50" stroke="%23000" stroke-width="2"/><text x="20" y="65" font-family="Arial" font-size="7" fill="%23000" font-weight="bold">Sprzedawca</text><line x1="20" y1="68" x2="100" y2="68" stroke="%23000" stroke-width="1"/><text x="20" y="75" font-family="Arial" font-size="6" fill="%23333">Nazwa firmy</text><text x="20" y="82" font-family="Arial" font-size="6" fill="%23333">adres ulica</text><text x="20" y="89" font-family="Arial" font-size="6" fill="%23333">00-950 Warszawa</text><text x="20" y="96" font-family="Arial" font-size="6" fill="%23333">NIP: 987987987</text><text x="20" y="103" font-family="Arial" font-size="6" fill="%23333">e-mail: info@egrupa.pl</text><text x="20" y="110" font-family="Arial" font-size="6" fill="%23333">Nr konta - 59 2480 0002 2201 XXXX 6181 XXXX</text><text x="20" y="117" font-family="Arial" font-size="6" fill="%23333">Nr SWIFT/BIC: BPKOPLPW</text><line x1="100" y1="60" x2="100" y2="125" stroke="%23000" stroke-width="1"/><text x="110" y="65" font-family="Arial" font-size="7" fill="%23000" font-weight="bold">Nabywca</text><line x1="110" y1="68" x2="180" y2="68" stroke="%23000" stroke-width="1"/><text x="110" y="75" font-family="Arial" font-size="6" fill="%23333">Kontrahent pojedynczy</text><text x="110" y="82" font-family="Arial" font-size="6" fill="%23333">Markowa 45</text><text x="110" y="89" font-family="Arial" font-size="6" fill="%23333">NIP: 123412344234</text><text x="110" y="96" font-family="Arial" font-size="6" fill="%23333">tel: 34 123412341234</text><text x="110" y="103" font-family="Arial" font-size="6" fill="%23333">e-mail: jan.kowalski@gmail.com</text><rect x="20" y="130" width="160" height="8" fill="%23f3f4f6"/><text x="22" y="136" font-family="Arial" font-size="5" fill="%23333" font-weight="bold">lp.</text><text x="35" y="136" font-family="Arial" font-size="5" fill="%23333" font-weight="bold">Nazwa towaru/usługi</text><text x="100" y="136" font-family="Arial" font-size="5" fill="%23333" font-weight="bold">Ilość</text><text x="120" y="136" font-family="Arial" font-size="5" fill="%23333" font-weight="bold">Cena netto</text><text x="140" y="136" font-family="Arial" font-size="5" fill="%23333" font-weight="bold">VAT</text><text x="160" y="136" font-family="Arial" font-size="5" fill="%23333" font-weight="bold">Kwota brutto</text><line x1="20" y1="138" x2="180" y2="138" stroke="%23d1d5db" stroke-width="0.5"/><text x="22" y="147" font-family="Arial" font-size="6" fill="%23555">1</text><text x="35" y="147" font-family="Arial" font-size="6" fill="%23555">Produkt 1</text><text x="100" y="147" font-family="Arial" font-size="6" fill="%23555">1.0</text><text x="120" y="147" font-family="Arial" font-size="6" fill="%23555">100.00</text><text x="140" y="147" font-family="Arial" font-size="6" fill="%23555">23%</text><text x="160" y="147" font-family="Arial" font-size="6" fill="%23555">123.00</text><text x="22" y="157" font-family="Arial" font-size="6" fill="%23555">2</text><text x="35" y="157" font-family="Arial" font-size="6" fill="%23555">Usługa 1</text><text x="100" y="157" font-family="Arial" font-size="6" fill="%23555">1.0</text><text x="120" y="157" font-family="Arial" font-size="6" fill="%23555">333.00</text><text x="140" y="157" font-family="Arial" font-size="6" fill="%23555">23%</text><text x="160" y="157" font-family="Arial" font-size="6" fill="%23555">409.59</text><line x1="20" y1="165" x2="180" y2="165" stroke="%23d1d5db" stroke-width="0.5"/><text x="160" y="175" font-family="Arial" font-size="7" fill="%23333" text-anchor="end">SUMA: 942.18</text><rect x="20" y="180" width="80" height="25" fill="%23f8f9fa" stroke="%23d1d5db" stroke-width="0.5"/><text x="22" y="188" font-family="Arial" font-size="5" fill="%23333" font-weight="bold">Stawka VAT</text><text x="22" y="195" font-family="Arial" font-size="5" fill="%23333" font-weight="bold">Netto</text><text x="22" y="202" font-family="Arial" font-size="5" fill="%23333" font-weight="bold">VAT</text><text x="22" y="209" font-family="Arial" font-size="5" fill="%23333" font-weight="bold">Brutto</text><text x="50" y="188" font-family="Arial" font-size="5" fill="%23555">23%</text><text x="50" y="195" font-family="Arial" font-size="5" fill="%23555">766.00</text><text x="50" y="202" font-family="Arial" font-size="5" fill="%23555">176.18</text><text x="50" y="209" font-family="Arial" font-size="5" fill="%23555">942.18</text><text x="20" y="220" font-family="Arial" font-size="6" fill="%23333">Sposób zapłaty: przelew</text><text x="20" y="228" font-family="Arial" font-size="6" fill="%23333">Termin zapłaty: 14 dni 2022-03-07</text><text x="20" y="240" font-family="Arial" font-size="10" fill="%23000" font-weight="bold">Razem do zapłaty: 942.18 PLN</text><line x1="20" y1="245" x2="180" y2="245" stroke="%23000" stroke-width="2"/><text x="20" y="255" font-family="Arial" font-size="6" fill="%23333">Kwota słownie: dziewięćset czterdzieści dwa PLN 18/100</text><rect x="80" y="260" width="40" height="15" fill="none" stroke="%23000" stroke-width="2"/><text x="100" y="270" font-family="Arial" font-size="5" fill="%23333" text-anchor="middle">Pieczęć graficzna</text></svg>',
-  },
-  {
-    id: 'modern',
-    name: 'Nowoczesny',
-    description: 'Minimalistyczny design z czystymi liniami i dużą czytelnością',
-    preview: 'data:image/svg+xml;utf8,<svg width="200" height="280" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="280" fill="%23ffffff"/><text x="20" y="25" font-family="Arial" font-size="14" fill="%23000" font-weight="bold">FAKTURA</text><text x="20" y="38" font-family="Arial" font-size="7" fill="%23666">NR 2024/01/042</text><text x="180" y="25" font-family="Arial" font-size="7" fill="%23666" text-anchor="end">15.01.2024</text><text x="20" y="55" font-family="Arial" font-size="6" fill="%23999">WYSTAWCA</text><text x="20" y="65" font-family="Arial" font-size="7" fill="%23333">TechSolutions Sp. z o.o.</text><text x="20" y="73" font-family="Arial" font-size="6" fill="%23666">ul. Nowoczesna 88</text><text x="20" y="81" font-family="Arial" font-size="6" fill="%23666">NIP: 1234567890</text><text x="110" y="55" font-family="Arial" font-size="6" fill="%23999">ODBIORCA</text><text x="110" y="65" font-family="Arial" font-size="7" fill="%23333">Digital Agency</text><text x="110" y="73" font-family="Arial" font-size="6" fill="%23666">ul. Biznesowa 21</text><text x="110" y="81" font-family="Arial" font-size="6" fill="%23666">NIP: 9876543210</text><line x1="20" y1="92" x2="180" y2="92" stroke="%23e5e7eb" stroke-width="1"/><text x="20" y="105" font-family="Arial" font-size="6" fill="%23999" font-weight="bold">POZYCJA</text><text x="130" y="105" font-family="Arial" font-size="6" fill="%23999" font-weight="bold" text-anchor="end">NETTO</text><text x="165" y="105" font-family="Arial" font-size="6" fill="%23999" font-weight="bold" text-anchor="end">VAT</text><text x="180" y="105" font-family="Arial" font-size="6" fill="%23999" font-weight="bold" text-anchor="end">BRUTTO</text><rect x="20" y="110" width="160" height="10" fill="%23f9fafb"/><text x="22" y="117" font-family="Arial" font-size="6" fill="%23333">Projekt strony internetowej</text><text x="130" y="117" font-family="Arial" font-size="6" fill="%23555" text-anchor="end">8 000</text><text x="165" y="117" font-family="Arial" font-size="6" fill="%23555" text-anchor="end">1 840</text><text x="180" y="117" font-family="Arial" font-size="6" fill="%23333" text-anchor="end" font-weight="bold">9 840</text><rect x="20" y="120" width="160" height="10" fill="%23ffffff"/><text x="22" y="127" font-family="Arial" font-size="6" fill="%23333">Optymalizacja SEO</text><text x="130" y="127" font-family="Arial" font-size="6" fill="%23555" text-anchor="end">2 500</text><text x="165" y="127" font-family="Arial" font-size="6" fill="%23555" text-anchor="end">575</text><text x="180" y="127" font-family="Arial" font-size="6" fill="%23333" text-anchor="end" font-weight="bold">3 075</text><rect x="20" y="130" width="160" height="10" fill="%23f9fafb"/><text x="22" y="137" font-family="Arial" font-size="6" fill="%23333">Copywriting (10 stron)</text><text x="130" y="137" font-family="Arial" font-size="6" fill="%23555" text-anchor="end">1 500</text><text x="165" y="137" font-family="Arial" font-size="6" fill="%23555" text-anchor="end">345</text><text x="180" y="137" font-family="Arial" font-size="6" fill="%23333" text-anchor="end" font-weight="bold">1 845</text><line x1="20" y1="150" x2="180" y2="150" stroke="%23e5e7eb" stroke-width="1"/><text x="100" y="165" font-family="Arial" font-size="7" fill="%23333" font-weight="bold">SUMA KOŃCOWA:</text><text x="180" y="165" font-family="Arial" font-size="10" fill="%23000" text-anchor="end" font-weight="bold">14 760 PLN</text><text x="20" y="185" font-family="Arial" font-size="5" fill="%23999">Zapłać do: 29.01.2024</text><text x="20" y="193" font-family="Arial" font-size="5" fill="%23999">Forma płatności: Przelew</text></svg>',
-  },
-]
-
 export function SettingsInvoiceForm({ settings }: SettingsInvoiceFormProps) {
   const [showLogoOnInvoices, setShowLogoOnInvoices] = useState(settings?.showLogoOnInvoices ?? true)
-  const [invoiceTemplate, setInvoiceTemplate] = useState(settings?.invoiceTemplate || 'classic')
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
@@ -52,7 +34,6 @@ export function SettingsInvoiceForm({ settings }: SettingsInvoiceFormProps) {
           type: 'invoice',
           data: {
             showLogoOnInvoices,
-            invoiceTemplate,
           },
         }),
       })
@@ -101,63 +82,6 @@ export function SettingsInvoiceForm({ settings }: SettingsInvoiceFormProps) {
               : "Faktury będą generowane bez logo firmy"
             }
           </p>
-        </div>
-
-        {/* Invoice Template */}
-        <div className="space-y-3">
-          <Label className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Szablon faktury
-          </Label>
-          <p className="text-xs text-muted-foreground">
-            Wybierz szablon, który będzie używany do generowania faktur PDF
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {INVOICE_TEMPLATES.map((template) => (
-              <Card
-                key={template.id}
-                className={`cursor-pointer transition-all hover:shadow-md ${
-                  invoiceTemplate === template.id
-                    ? 'border-2 border-primary shadow-lg'
-                    : 'border-2 border-transparent'
-                }`}
-                onClick={() => setInvoiceTemplate(template.id)}
-              >
-                <div className="p-4 space-y-3">
-                  <div className="aspect-[3/4] bg-white dark:bg-muted rounded-lg flex items-center justify-center border overflow-hidden">
-                    <img
-                      src={template.preview}
-                      alt={`Podgląd szablonu ${template.name}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Fallback to icon if image not found
-                        e.currentTarget.style.display = 'none'
-                        const parent = e.currentTarget.parentElement
-                        if (parent) {
-                          const icon = document.createElement('div')
-                          icon.innerHTML = '<svg class="h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>'
-                          parent.appendChild(icon.firstChild!)
-                        }
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-sm">{template.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {template.description}
-                    </p>
-                  </div>
-                  {invoiceTemplate === template.id && (
-                    <div className="flex items-center gap-1 text-xs text-primary font-medium">
-                      <div className="h-2 w-2 rounded-full bg-primary" />
-                      Wybrany
-                    </div>
-                  )}
-                </div>
-              </Card>
-            ))}
-          </div>
         </div>
       </div>
 

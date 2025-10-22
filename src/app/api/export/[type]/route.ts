@@ -3,8 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { stringify } from 'csv-stringify/sync'
-import { renderToStream } from '@react-pdf/renderer'
-import { InvoicePDF } from '@/lib/pdf-generator'
+import { generateInvoicePDF } from '@/lib/pdf-generator'
 import { writeFile, mkdir, readdir } from 'fs/promises'
 import { join } from 'path'
 import { createReadStream, createWriteStream } from 'fs'
@@ -221,30 +220,7 @@ async function exportPDF(userId: string) {
   // Generuj PDF dla każdej faktury
   const pdfFiles: string[] = []
   for (const invoice of invoices) {
-    const company = invoice.user.settings || {}
-    const invoiceData = {
-      number: invoice.number,
-      issueDate: invoice.issueDate,
-      saleDate: invoice.saleDate,
-      dueDate: invoice.dueDate,
-      paymentMethod: invoice.paymentMethod,
-      notes: invoice.notes,
-      totalNet: invoice.totalNet,
-      totalVat: invoice.totalVat,
-      totalGross: invoice.totalGross,
-      buyer: invoice.buyer,
-      items: invoice.items,
-    }
-
-    const pdfStream = await renderToStream(
-      InvoicePDF({ invoice: invoiceData, company })
-    )
-
-    const chunks: Buffer[] = []
-    for await (const chunk of pdfStream) {
-      chunks.push(chunk)
-    }
-    const pdfBuffer = Buffer.concat(chunks)
+    const pdfBuffer = await generateInvoicePDF(invoice)
 
     const filename = `${invoice.number.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
     const filepath = join(tempDir, filename)

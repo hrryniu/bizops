@@ -7,8 +7,8 @@ import * as path from 'path';
 
 // Dynamic import to avoid Next.js ESM issues
 async function importInvoiceReader() {
-  const module = await import('../../invoice-reader/dist/index.js');
-  return module;
+  const invoiceReaderModule = await import('../../invoice-reader/dist/index.js');
+  return invoiceReaderModule;
 }
 
 interface InvoiceData {
