@@ -14,6 +14,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:studio": "prisma studio",
+    "clean-notes": "tsx scripts/clean-invoice-notes.ts",
     "prepare": "husky install"
   },
   "dependencies": {

@@ -412,14 +412,15 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
     // Email/website można dodać jeśli dostępne
   }
   
-  // === SECTION 3: INVOICE TITLE & NUMBER (Top-Right, Centered) ===
-  const invoiceTitleX = width - 180
+  // === SECTION 3: INVOICE TITLE & NUMBER (Centered, One Line) ===
   let titleY = 50
-  addText('Faktura', invoiceTitleX, titleY, { size: 16, color: rgb(0, 0, 0) })
-  titleY += 20
-  addText(`nr: ${invoice.number}`, invoiceTitleX, titleY, { size: 13, color: rgb(0.2, 0.2, 0.2) })
+  const invoiceTitle = `Faktura nr: ${invoice.number}`
+  const titleWidth = helpers.font.widthOfTextAtSize(invoiceTitle, 16)
+  const centeredX = (width - titleWidth) / 2
+  addText(invoiceTitle, centeredX, titleY, { size: 16, color: rgb(0, 0, 0) })
   
   // === SECTION 4: DATES (Right Side, Below Title) ===
+  const invoiceTitleX = width - 180
   let dateY = titleY + 30
   addText(`Wystawiona w dniu:`, invoiceTitleX - 30, dateY, { size: 9, color: rgb(0.3, 0.3, 0.3) })
   dateY += 14
@@ -465,16 +466,16 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   // === SECTION 7: ITEMS TABLE ===
   const tableStartY = Math.max(buyerY, paymentY) + 40
   
-  // Table header with 9 columns
+  // Table header with 9 columns - adjusted to prevent overlap
   const col1X = 50   // Lp.
   const col2X = 75   // Nazwa
-  const col3X = 250  // J.m.
-  const col4X = 285  // Ilość
-  const col5X = 325  // Cena netto
-  const col6X = 385  // Wartość netto
-  const col7X = 450  // VAT %
-  const col8X = 490  // Kwota VAT
-  const col9X = 530  // Wartość brutto (right-aligned)
+  const col3X = 245  // J.m.
+  const col4X = 280  // Ilość
+  const col5X = 315  // Cena netto
+  const col6X = 370  // Wartość netto
+  const col7X = 430  // VAT %
+  const col8X = 470  // Kwota VAT
+  const col9X = 520  // Wartość brutto
   
   // Header background
   addRect(col1X, tableStartY, width - 100, 18, { color: rgb(0.9, 0.9, 0.9) })
@@ -483,15 +484,15 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   
   // Header text
   let headerY = tableStartY + 12
-  addText('Lp.', col1X + 5, headerY, { size: 8, color: rgb(0, 0, 0) })
-  addText('Nazwa towaru lub uslugi', col2X, headerY, { size: 8, color: rgb(0, 0, 0) })
-  addText('J.m.', col3X, headerY, { size: 8, color: rgb(0, 0, 0) })
-  addText('Ilosc', col4X, headerY, { size: 8, color: rgb(0, 0, 0) })
-  addText('Cena netto', col5X, headerY, { size: 8, color: rgb(0, 0, 0) })
-  addText('Wartosc netto', col6X, headerY, { size: 8, color: rgb(0, 0, 0) })
-  addText('VAT %', col7X, headerY, { size: 8, color: rgb(0, 0, 0) })
-  addText('Kwota VAT', col8X, headerY, { size: 8, color: rgb(0, 0, 0) })
-  addText('Brutto', col9X - 10, headerY, { size: 8, color: rgb(0, 0, 0) })
+  addText('Lp.', col1X + 5, headerY, { size: 7.5, color: rgb(0, 0, 0) })
+  addText('Nazwa towaru lub uslugi', col2X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
+  addText('J.m.', col3X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
+  addText('Ilosc', col4X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
+  addText('Cena netto', col5X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
+  addText('Wartosc netto', col6X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
+  addText('VAT %', col7X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
+  addText('Kwota VAT', col8X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
+  addText('Brutto', col9X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
   
   // Table rows
   let currentRowY = tableStartY + 32
@@ -500,14 +501,14 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
     
     // Row data
     addText((index + 1).toString(), col1X + 5, currentRowY, { size: 9 })
-    addWrappedText(item.name, col2X, currentRowY, 165, { size: 9 })
+    addWrappedText(item.name, col2X, currentRowY, 160, { size: 9 })
     addText(item.unit || 'szt.', col3X, currentRowY, { size: 9 })
     addText(item.quantity.toString(), col4X, currentRowY, { size: 9 })
     addText(parseFloat(item.netPrice).toFixed(2), col5X, currentRowY, { size: 9 })
     addText(parseFloat(item.lineNet).toFixed(2), col6X, currentRowY, { size: 9 })
     addText(`${item.vatRate}%`, col7X, currentRowY, { size: 9 })
     addText(parseFloat(item.lineVat).toFixed(2), col8X, currentRowY, { size: 9 })
-    addText(parseFloat(item.lineGross).toFixed(2), col9X - 10, currentRowY, { size: 9 })
+    addText(parseFloat(item.lineGross).toFixed(2), col9X, currentRowY, { size: 9 })
     
     currentRowY += rowHeight
     addLine(col1X, currentRowY - 2, width - 50, currentRowY - 2, 0.5, rgb(0.7, 0.7, 0.7))
@@ -520,7 +521,7 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   addText('Razem', col2X, totalsY, { size: 10, color: rgb(0, 0, 0) })
   addText(parseFloat(invoice.totalNet).toFixed(2), col6X, totalsY, { size: 10, color: rgb(0, 0, 0) })
   addText(parseFloat(invoice.totalVat).toFixed(2), col8X, totalsY, { size: 10, color: rgb(0, 0, 0) })
-  addText(parseFloat(invoice.totalGross).toFixed(2), col9X - 10, totalsY, { size: 10, color: rgb(0, 0, 0) })
+  addText(parseFloat(invoice.totalGross).toFixed(2), col9X, totalsY, { size: 10, color: rgb(0, 0, 0) })
   
   // VAT breakdown row (W tym)
   const breakdownY = totalsY + 18
@@ -529,7 +530,7 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   // Assuming all items have 23% VAT for simplicity
   addText('23%', col7X, breakdownY, { size: 9 })
   addText(parseFloat(invoice.totalVat).toFixed(2), col8X, breakdownY, { size: 9 })
-  addText(parseFloat(invoice.totalGross).toFixed(2), col9X - 10, breakdownY, { size: 9 })
+  addText(parseFloat(invoice.totalGross).toFixed(2), col9X, breakdownY, { size: 9 })
   
   // === SECTION 9: TOTAL AMOUNT DUE ===
   const amountDueY = breakdownY + 30
@@ -545,8 +546,42 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   // === SECTION 10: NOTES ===
   const notesY = amountInWordsY + 40
   if (invoice.notes) {
+    // Remove duplicate phrases from notes
+    const cleanNotes = (() => {
+      let text = invoice.notes.trim()
+      
+      // Try to detect and remove repeating patterns
+      // Check if text contains obvious duplicates by looking for repeated sequences
+      const words = text.split(/\s+/)
+      if (words.length > 10) {
+        // For longer texts, try to find if first half repeats in second half
+        const halfLength = Math.floor(words.length / 2)
+        const firstHalf = words.slice(0, halfLength).join(' ')
+        const remaining = words.slice(halfLength).join(' ')
+        
+        // If first part appears again in the remaining text, it's likely a duplicate
+        if (remaining.includes(firstHalf.substring(0, Math.min(50, firstHalf.length)))) {
+          return firstHalf + '.'
+        }
+      }
+      
+      // Also check for simpler repetitions (same text repeated twice)
+      const possibleDuplicateLength = Math.floor(text.length / 2)
+      for (let len = possibleDuplicateLength; len >= 20; len--) {
+        const firstPart = text.substring(0, len).trim()
+        const secondPart = text.substring(len).trim()
+        
+        // Check if second part starts with first part (allowing for minor variations)
+        if (secondPart.startsWith(firstPart.substring(0, Math.min(30, firstPart.length)))) {
+          return firstPart
+        }
+      }
+      
+      return text
+    })()
+    
     addText('Uwagi:', 50, notesY, { size: 9, color: rgb(0, 0, 0) })
-    addWrappedText(invoice.notes, 50, notesY + 14, width - 100, { size: 8, color: rgb(0.3, 0.3, 0.3) })
+    addWrappedText(cleanNotes, 50, notesY + 14, width - 100, { size: 8, color: rgb(0.3, 0.3, 0.3) })
   }
   
   // === SECTION 11: SIGNATURE LINES ===

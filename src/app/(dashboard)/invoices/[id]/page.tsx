@@ -6,9 +6,44 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Download, ArrowLeft } from 'lucide-react'
+import { Download, ArrowLeft, Edit, Eye } from 'lucide-react'
 import { InvoiceStatusChanger } from '@/components/invoices/invoice-status-changer'
 import Link from 'next/link'
+
+// Helper function to remove duplicate sentences/phrases from notes
+function cleanNotes(text: string): string {
+  if (!text) return text
+  
+  let cleanText = text.trim()
+  
+  // Try to detect and remove repeating patterns
+  const words = cleanText.split(/\s+/)
+  if (words.length > 10) {
+    // For longer texts, try to find if first half repeats in second half
+    const halfLength = Math.floor(words.length / 2)
+    const firstHalf = words.slice(0, halfLength).join(' ')
+    const remaining = words.slice(halfLength).join(' ')
+    
+    // If first part appears again in the remaining text, it's likely a duplicate
+    if (remaining.includes(firstHalf.substring(0, Math.min(50, firstHalf.length)))) {
+      return firstHalf
+    }
+  }
+  
+  // Also check for simpler repetitions (same text repeated twice)
+  const possibleDuplicateLength = Math.floor(cleanText.length / 2)
+  for (let len = possibleDuplicateLength; len >= 20; len--) {
+    const firstPart = cleanText.substring(0, len).trim()
+    const secondPart = cleanText.substring(len).trim()
+    
+    // Check if second part starts with first part
+    if (secondPart.startsWith(firstPart.substring(0, Math.min(30, firstPart.length)))) {
+      return firstPart
+    }
+  }
+  
+  return cleanText
+}
 
 export default async function InvoiceDetailPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
@@ -25,6 +60,9 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
   if (!invoice || invoice.userId !== userId) {
     notFound()
   }
+  
+  // Clean notes from duplicates
+  const displayNotes = invoice.notes ? cleanNotes(invoice.notes) : null
 
   return (
     <div className="space-y-6">
@@ -45,10 +83,24 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
           </p>
         </div>
         <div className="flex gap-2">
+          {invoice.status === 'DRAFT' && (
+            <Button asChild variant="outline">
+              <Link href={`/invoices/${invoice.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edytuj
+              </Link>
+            </Button>
+          )}
           <InvoiceStatusChanger 
             invoiceId={invoice.id} 
             currentStatus={invoice.status} 
           />
+          <Button asChild variant="outline">
+            <a href={`/api/invoices/${invoice.id}/pdf?preview=true`} target="_blank" rel="noopener noreferrer">
+              <Eye className="mr-2 h-4 w-4" />
+              Podgląd PDF
+            </a>
+          </Button>
           <Button asChild>
             <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer">
               <Download className="mr-2 h-4 w-4" />
@@ -144,6 +196,17 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
           </div>
         </CardContent>
       </Card>
+
+      {displayNotes && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Uwagi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{displayNotes}</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

@@ -1,37 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
-import { Plus, Trash2, FileText } from 'lucide-react'
+import { Plus, Trash2, ArrowLeft } from 'lucide-react'
 import { formatDate, calculateLineItem } from '@/lib/utils'
-import { InvoiceFileParser } from '@/components/invoices/invoice-file-parser'
-import { InvoiceReaderUpload } from '@/components/invoices/invoice-reader-upload'
-
-type ParsedInvoiceData = {
-  invoiceNumber?: string
-  issueDate?: string
-  dueDate?: string
-  buyerName?: string
-  buyerNIP?: string
-  buyerAddress?: string
-  totalNet?: number
-  totalVat?: number
-  totalGross?: number
-  items?: Array<{
-    name: string
-    quantity: number
-    unit: string
-    netPrice: number
-    vatRate: string
-    lineGross: number
-  }>
-}
+import Link from 'next/link'
 
 type Contractor = {
   id: string
@@ -64,23 +43,24 @@ type InvoiceItem = {
   lineGross: string
 }
 
-export default function NewInvoicePage() {
+export default function EditInvoicePage() {
   const router = useRouter()
+  const params = useParams()
+  const invoiceId = params?.id as string
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [loadingData, setLoadingData] = useState(true)
   const [contractors, setContractors] = useState<Contractor[]>([])
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
   const [isVatPayer, setIsVatPayer] = useState(true)
-  const [showFileParser, setShowFileParser] = useState(false)
   const [isPrivatePerson, setIsPrivatePerson] = useState(false)
-  const [autoNumbering, setAutoNumbering] = useState(true)
   const [privatePerson, setPrivatePerson] = useState({
     firstName: '',
     lastName: '',
   })
   const [formData, setFormData] = useState({
     number: '',
-    issueDate: formatDate(new Date(), 'short').split('.').reverse().join('-'),
+    issueDate: '',
     saleDate: '',
     dueDate: '',
     paymentMethod: '',
@@ -89,49 +69,102 @@ export default function NewInvoicePage() {
     buyerId: '',
     notes: '',
   })
-  const [items, setItems] = useState<InvoiceItem[]>([
-    {
-      id: '1',
-      name: '',
-      quantity: '1',
-      unit: 'szt',
-      netPrice: '0',
-      vatRate: '23', // Will be updated based on VAT payer status
-      discount: '0',
-      lineNet: '0',
-      lineVat: '0',
-      lineGross: '0',
-    },
-  ])
+  const [items, setItems] = useState<InvoiceItem[]>([])
 
   useEffect(() => {
+    fetchInvoiceData()
     fetchContractors()
     fetchBankAccounts()
-  }, [])
-  
-  // Generuj automatyczny numer faktury
-  useEffect(() => {
-    if (autoNumbering && formData.issueDate) {
-      generateAutoNumber()
-    }
-  }, [autoNumbering, formData.issueDate])
-  
-  const generateAutoNumber = async () => {
+  }, [invoiceId])
+
+  const fetchInvoiceData = async () => {
     try {
-      const issueDate = new Date(formData.issueDate)
-      const year = issueDate.getFullYear()
-      const month = issueDate.getMonth() + 1
-      
-      // Pobierz faktury z tego samego miesiąca
-      const response = await fetch(`/api/invoices/next-number?year=${year}&month=${month}`)
+      const response = await fetch(`/api/invoices/${invoiceId}`)
       if (response.ok) {
-        const data = await response.json()
-        const monthStr = month.toString().padStart(2, '0')
-        const autoNumber = `FV/${data.nextNumber}/${monthStr}/${year}`
-        setFormData(prev => ({ ...prev, number: autoNumber }))
+        const invoice = await response.json()
+        
+        // Check if invoice is DRAFT
+        if (invoice.status !== 'DRAFT') {
+          toast({
+            title: 'Błąd',
+            description: 'Można edytować tylko faktury będące szkicami',
+            variant: 'destructive',
+          })
+          router.push(`/invoices/${invoiceId}`)
+          return
+        }
+        
+        // Set form data
+        const formatDateForInput = (date: string | Date) => {
+          if (!date) return ''
+          const d = new Date(date)
+          return d.toISOString().split('T')[0]
+        }
+        
+        setFormData({
+          number: invoice.number,
+          issueDate: formatDateForInput(invoice.issueDate),
+          saleDate: invoice.saleDate ? formatDateForInput(invoice.saleDate) : '',
+          dueDate: invoice.dueDate ? formatDateForInput(invoice.dueDate) : '',
+          paymentMethod: invoice.paymentMethod || '',
+          selectedBankAccount: invoice.selectedBankAccount || '',
+          currency: invoice.currency || 'PLN',
+          buyerId: invoice.buyerId || '',
+          notes: invoice.notes || '',
+        })
+        
+        // Set buyer type
+        if (invoice.buyerPrivatePerson) {
+          setIsPrivatePerson(true)
+          const [firstName, ...lastNameParts] = invoice.buyerPrivatePerson.split(' ')
+          setPrivatePerson({
+            firstName: firstName || '',
+            lastName: lastNameParts.join(' ') || '',
+          })
+        }
+        
+        // Set items
+        const invoiceItems = invoice.items.map((item: any, index: number) => ({
+          id: (index + 1).toString(),
+          name: item.name,
+          quantity: item.quantity.toString(),
+          unit: item.unit || 'szt',
+          netPrice: item.netPrice.toString(),
+          vatRate: item.vatRate,
+          discount: item.discount?.toString() || '0',
+          lineNet: item.lineNet.toString(),
+          lineVat: item.lineVat.toString(),
+          lineGross: item.lineGross.toString(),
+        }))
+        setItems(invoiceItems.length > 0 ? invoiceItems : [{
+          id: '1',
+          name: '',
+          quantity: '1',
+          unit: 'szt',
+          netPrice: '0',
+          vatRate: '23',
+          discount: '0',
+          lineNet: '0',
+          lineVat: '0',
+          lineGross: '0',
+        }])
+      } else if (response.status === 404) {
+        toast({
+          title: 'Błąd',
+          description: 'Faktura nie została znaleziona',
+          variant: 'destructive',
+        })
+        router.push('/invoices')
       }
     } catch (error) {
-      console.error('Failed to generate invoice number:', error)
+      console.error('Failed to fetch invoice:', error)
+      toast({
+        title: 'Błąd',
+        description: 'Nie udało się pobrać danych faktury',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoadingData(false)
     }
   }
 
@@ -155,23 +188,10 @@ export default function NewInvoicePage() {
         if (data.settings?.bankAccounts) {
           const accounts = JSON.parse(data.settings.bankAccounts)
           setBankAccounts(accounts)
-        // Set default account if available
-        const defaultAccount = accounts.find((acc: BankAccount) => acc.isDefault)
-        if (defaultAccount) {
-          setFormData(prev => ({ 
-            ...prev, 
-            selectedBankAccount: defaultAccount.name,
-            currency: defaultAccount.currency || 'PLN'
-          }))
-        }
         }
         
         // Set VAT payer status
         setIsVatPayer(data.settings?.isVatPayer ?? true)
-        
-        // Update default VAT rate based on VAT payer status
-        const defaultVatRate = data.settings?.isVatPayer === false ? 'zw' : '23'
-        setItems(prev => prev.map(item => ({ ...item, vatRate: defaultVatRate })))
       }
     } catch (error) {
       console.error('Failed to fetch bank accounts:', error)
@@ -248,77 +268,6 @@ export default function NewInvoicePage() {
     }
   }
 
-  const handleFileDataParsed = (data: ParsedInvoiceData) => {
-    // Wypełnij formularz danymi z pliku
-    if (data.invoiceNumber) {
-      setFormData(prev => ({ ...prev, number: data.invoiceNumber! }))
-    }
-    if (data.issueDate) {
-      setFormData(prev => ({ ...prev, issueDate: data.issueDate! }))
-    }
-    if (data.dueDate) {
-      setFormData(prev => ({ ...prev, dueDate: data.dueDate! }))
-    }
-    
-    // Dodaj pozycje jeśli zostały wykryte
-    if (data.items && data.items.length > 0) {
-      const newItems = data.items.map((item, index) => ({
-        id: (index + 1).toString(),
-        name: item.name,
-        quantity: item.quantity.toString(),
-        unit: item.unit,
-        netPrice: item.netPrice.toString(),
-        vatRate: item.vatRate,
-        discount: '0',
-        lineNet: item.lineGross.toString(),
-        lineVat: '0',
-        lineGross: item.lineGross.toString(),
-      }))
-      setItems(newItems)
-    }
-    
-    setShowFileParser(false)
-    toast({
-      title: 'Dane wczytane',
-      description: 'Formularz został wypełniony danymi z pliku.',
-    })
-  }
-
-  const handleInvoiceReaderData = (data: any) => {
-    // Wypełnij formularz danymi z invoice-reader
-    if (data.invoiceNumber) {
-      setFormData(prev => ({ ...prev, number: data.invoiceNumber }))
-    }
-    if (data.issueDate) {
-      setFormData(prev => ({ ...prev, issueDate: data.issueDate }))
-    }
-    if (data.saleDate) {
-      setFormData(prev => ({ ...prev, saleDate: data.saleDate }))
-    }
-    
-    // Dodaj pozycje
-    if (data.positions && data.positions.length > 0) {
-      const newItems = data.positions.map((pos: any, index: number) => ({
-        id: (index + 1).toString(),
-        name: pos.name,
-        quantity: pos.quantity?.toString() || '1',
-        unit: pos.unit || 'szt',
-        netPrice: pos.unitPrice?.value?.toString() || pos.net?.value?.toString() || '0',
-        vatRate: pos.vatRate || '23',
-        discount: '0',
-        lineNet: pos.net?.value?.toString() || '0',
-        lineVat: pos.vat?.value?.toString() || '0',
-        lineGross: pos.gross?.value?.toString() || '0',
-      }))
-      setItems(newItems)
-    }
-    
-    toast({
-      title: 'Dane rozpoznane',
-      description: `Formularz wypełniony automatycznie (pewność: ${Math.round(data.confidence * 100)}%)`,
-    })
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -371,26 +320,27 @@ export default function NewInvoicePage() {
         ...totals,
       }
 
-      const response = await fetch('/api/invoices', {
-        method: 'POST',
+      const response = await fetch(`/api/invoices/${invoiceId}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(invoiceData),
       })
 
       if (response.ok) {
-        const invoice = await response.json()
         toast({
-          title: 'Utworzono',
-          description: 'Faktura została utworzona',
+          title: 'Zapisano',
+          description: 'Faktura została zaktualizowana',
         })
-        router.push(`/invoices/${invoice.id}`)
+        router.push(`/invoices/${invoiceId}`)
       } else {
-        throw new Error()
+        const error = await response.json()
+        throw new Error(error.error || 'Unknown error')
       }
     } catch (error) {
+      console.error('Update error:', error)
       toast({
         title: 'Błąd',
-        description: 'Nie udało się utworzyć faktury',
+        description: 'Nie udało się zaktualizować faktury',
         variant: 'destructive',
       })
     } finally {
@@ -398,17 +348,31 @@ export default function NewInvoicePage() {
     }
   }
 
+  if (loadingData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">Ładowanie danych...</p>
+      </div>
+    )
+  }
+
   const totals = calculateTotals()
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Nowa faktura</h1>
-        <p className="text-muted-foreground">Utwórz nową fakturę przychodową</p>
+      <div className="flex items-center gap-4">
+        <Link href={`/invoices/${invoiceId}`}>
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Powrót
+          </Button>
+        </Link>
       </div>
 
-      {/* Inteligentne rozpoznawanie faktur */}
-      <InvoiceReaderUpload onDataExtracted={handleInvoiceReaderData} />
+      <div>
+        <h1 className="text-3xl font-bold">Edytuj fakturę</h1>
+        <p className="text-muted-foreground">Edytuj dane faktury {formData.number}</p>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Podstawowe informacje */}
@@ -419,32 +383,13 @@ export default function NewInvoicePage() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <div className="flex items-center justify-between mb-2">
-                  <Label htmlFor="number">Numer faktury *</Label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input
-                      type="checkbox"
-                      checked={autoNumbering}
-                      onChange={(e) => setAutoNumbering(e.target.checked)}
-                      className="w-4 h-4"
-                    />
-                    <span>Automatyczna numeracja</span>
-                  </label>
-                </div>
+                <Label htmlFor="number">Numer faktury *</Label>
                 <Input
                   id="number"
                   value={formData.number}
                   onChange={(e) => setFormData({ ...formData, number: e.target.value })}
                   required
-                  readOnly={autoNumbering}
-                  className={autoNumbering ? 'bg-muted cursor-not-allowed' : ''}
-                  placeholder={autoNumbering ? 'Generowane automatycznie' : 'Wpisz numer faktury'}
                 />
-                {autoNumbering && (
-                  <p className="text-xs text-muted-foreground">
-                    Format: FV/numer/miesiąc/rok (np. FV/1/10/2025)
-                  </p>
-                )}
               </div>
               <div className="space-y-2">
                 <Label>Typ nabywcy</Label>
@@ -756,28 +701,18 @@ export default function NewInvoicePage() {
 
         <div className="flex gap-2">
           <Button type="submit" disabled={loading}>
-            {loading ? 'Zapisywanie...' : 'Zapisz jako szkic'}
+            {loading ? 'Zapisywanie...' : 'Zapisz zmiany'}
           </Button>
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.back()}
+            onClick={() => router.push(`/invoices/${invoiceId}`)}
           >
             Anuluj
           </Button>
         </div>
       </form>
-
-      {showFileParser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <InvoiceFileParser
-              onDataParsed={handleFileDataParsed}
-              onCancel={() => setShowFileParser(false)}
-            />
-          </div>
-        </div>
-      )}
     </div>
   )
 }
+

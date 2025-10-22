@@ -33,10 +33,16 @@ export async function GET(
 
     const pdfBuffer = await generateInvoicePDF(invoice)
 
+    // Check if preview mode is requested
+    const { searchParams } = new URL(request.url)
+    const isPreview = searchParams.get('preview') === 'true'
+
     return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="faktura-${invoice.number}.pdf"`,
+        'Content-Disposition': isPreview 
+          ? `inline; filename="faktura-${invoice.number}.pdf"`
+          : `attachment; filename="faktura-${invoice.number}.pdf"`,
       },
     })
   } catch (error) {

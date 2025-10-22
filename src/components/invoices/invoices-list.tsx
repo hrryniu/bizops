@@ -13,7 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Eye, Download, Trash2 } from 'lucide-react'
+import { Eye, Download, Trash2, FileText } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { InvoiceStatusChanger } from './invoice-status-changer'
 
@@ -131,7 +131,7 @@ export function InvoicesList({ invoices }: { invoices: Invoice[] }) {
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Link href={`/invoices/${invoice.id}`}>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" title="Szczegóły">
                           <Eye className="h-4 w-4" />
                         </Button>
                       </Link>
@@ -139,6 +139,17 @@ export function InvoicesList({ invoices }: { invoices: Invoice[] }) {
                         variant="ghost" 
                         size="sm"
                         asChild
+                        title="Podgląd PDF"
+                      >
+                        <a href={`/api/invoices/${invoice.id}/pdf?preview=true`} target="_blank" rel="noopener noreferrer">
+                          <FileText className="h-4 w-4" />
+                        </a>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        asChild
+                        title="Pobierz PDF"
                       >
                         <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer">
                           <Download className="h-4 w-4" />
@@ -150,6 +161,7 @@ export function InvoicesList({ invoices }: { invoices: Invoice[] }) {
                         onClick={() => handleDelete(invoice.id)}
                         disabled={deletingId === invoice.id}
                         className="text-red-600 hover:text-red-700"
+                        title="Usuń"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
