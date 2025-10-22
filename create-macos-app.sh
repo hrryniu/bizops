@@ -121,35 +121,65 @@ chmod +x "$APP_DIR/Contents/MacOS/BizOps"
 # Utwórz ikonkę aplikacji (ICNS)
 echo "🎨 Tworzenie ikonki aplikacji..."
 
-# Utwórz tymczasowy plik SVG z większą rozdzielczością
-cat > "/tmp/bizops-icon.svg" << 'EOF'
+# Sprawdź czy istnieje logo w katalogu nadrzędnym
+LOGO_FILES=(
+    "../BizOps Logo Design.png"
+    "../Bizops logo full.png"
+    "../BizOps Logo Design- cropped.png"
+    "public/logo.png"
+)
+
+LOGO_FOUND=false
+for logo_path in "${LOGO_FILES[@]}"; do
+    if [ -f "$logo_path" ]; then
+        echo "✅ Znaleziono logo: $logo_path"
+        # Skopiuj i przeskaluj logo do 1024x1024 (najwyższa jakość dla Retina)
+        if command -v sips &> /dev/null; then
+            sips -z 1024 1024 "$logo_path" --out "/tmp/bizops-icon.png" >/dev/null 2>&1
+            LOGO_FOUND=true
+            break
+        elif command -v convert &> /dev/null; then
+            convert "$logo_path" -resize 1024x1024 -background none -gravity center -extent 1024x1024 "/tmp/bizops-icon.png"
+            LOGO_FOUND=true
+            break
+        fi
+    fi
+done
+
+# Jeśli nie znaleziono logo, wygeneruj z SVG
+if [ "$LOGO_FOUND" = false ]; then
+    echo "ℹ️  Generowanie ikonki z SVG..."
+    
+    # Utwórz tymczasowy plik SVG z większą rozdzielczością
+    cat > "/tmp/bizops-icon.svg" << 'EOF'
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Dark background -->
-  <rect width="512" height="512" rx="96" fill="#0f172a"/>
+  <rect width="512" height="512" rx="96" fill="#0a0f1e"/>
   
   <!-- Letter B with interconnected nodes and lines -->
   <defs>
-    <linearGradient id="bGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
+    <linearGradient id="bGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#3b82f6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
     </linearGradient>
   </defs>
   
-  <!-- Nodes (circles) -->
-  <circle cx="128" cy="128" r="40" fill="url(#bGradient)" stroke="url(#bGradient)" stroke-width="8"/>
-  <circle cx="128" cy="256" r="40" fill="url(#bGradient)" stroke="url(#bGradient)" stroke-width="8"/>
-  <circle cx="128" cy="384" r="40" fill="url(#bGradient)" stroke="url(#bGradient)" stroke-width="8"/>
+  <!-- Nodes (circles) with glow effect -->
+  <circle cx="128" cy="128" r="40" fill="url(#bGradient)" filter="url(#glow)"/>
+  <circle cx="128" cy="256" r="40" fill="url(#bGradient)" filter="url(#glow)"/>
+  <circle cx="128" cy="384" r="40" fill="url(#bGradient)" filter="url(#glow)"/>
   
   <!-- Top loop nodes -->
-  <circle cx="256" cy="128" r="40" fill="url(#bGradient)" stroke="url(#bGradient)" stroke-width="8"/>
-  <circle cx="352" cy="128" r="40" fill="url(#bGradient)" stroke="url(#bGradient)" stroke-width="8"/>
-  <circle cx="384" cy="192" r="40" fill="url(#bGradient)" stroke="url(#bGradient)" stroke-width="8"/>
+  <circle cx="256" cy="128" r="40" fill="url(#bGradient)" filter="url(#glow)"/>
+  <circle cx="352" cy="128" r="40" fill="url(#bGradient)" filter="url(#glow)"/>
+  <circle cx="384" cy="192" r="40" fill="url(#bGradient)" filter="url(#glow)"/>
   
   <!-- Bottom loop nodes -->
-  <circle cx="256" cy="384" r="40" fill="url(#bGradient)" stroke="url(#bGradient)" stroke-width="8"/>
-  <circle cx="352" cy="384" r="40" fill="url(#bGradient)" stroke="url(#bGradient)" stroke-width="8"/>
-  <circle cx="384" cy="320" r="40" fill="url(#bGradient)" stroke="url(#bGradient)" stroke-width="8"/>
+  <circle cx="256" cy="384" r="40" fill="url(#bGradient)" filter="url(#glow)"/>
+  <circle cx="352" cy="384" r="40" fill="url(#bGradient)" filter="url(#glow)"/>
+  <circle cx="384" cy="320" r="40" fill="url(#bGradient)" filter="url(#glow)"/>
   
   <!-- Connecting lines -->
   <path d="M168 128 L216 128" stroke="url(#bGradient)" stroke-width="48" stroke-linecap="round"/>
@@ -172,31 +202,17 @@ cat > "/tmp/bizops-icon.svg" << 'EOF'
 </svg>
 EOF
 
-# Sprawdź czy rsvg-convert jest dostępny (część librsvg)
-if command -v rsvg-convert &> /dev/null; then
-    rsvg-convert -w 512 -h 512 "/tmp/bizops-icon.svg" -o "/tmp/bizops-icon.png"
-elif command -v convert &> /dev/null; then
-    # Fallback do ImageMagick
-    convert "/tmp/bizops-icon.svg" -resize 512x512 "/tmp/bizops-icon.png"
-else
-    echo "⚠️  Ostrzeżenie: Nie można znaleźć rsvg-convert ani ImageMagick. Używam domyślnej ikonki."
-    # Utwórz prostą ikonkę PNG
-    python3 -c "
-from PIL import Image, ImageDraw
-import sys
-try:
-    img = Image.new('RGB', (512, 512), color='#0f172a')
-    draw = ImageDraw.Draw(img)
-    # Rysuj prostą ikonkę B
-    draw.rectangle([128, 88, 168, 424], fill='#3b82f6')
-    draw.rectangle([168, 88, 352, 168], fill='#3b82f6')
-    draw.rectangle([168, 216, 352, 296], fill='#3b82f6')
-    draw.rectangle([168, 344, 352, 424], fill='#3b82f6')
-    img.save('/tmp/bizops-icon.png')
-except ImportError:
-    print('PIL nie jest zainstalowany. Używam domyślnej ikonki.')
-    sys.exit(1)
-" 2>/dev/null || echo "⚠️  Nie można utworzyć ikonki. Używam domyślnej."
+    # Sprawdź czy rsvg-convert jest dostępny (część librsvg)
+    if command -v rsvg-convert &> /dev/null; then
+        rsvg-convert -w 1024 -h 1024 "/tmp/bizops-icon.svg" -o "/tmp/bizops-icon.png"
+    elif command -v convert &> /dev/null; then
+        # Fallback do ImageMagick
+        convert "/tmp/bizops-icon.svg" -resize 1024x1024 "/tmp/bizops-icon.png"
+    else
+        echo "⚠️  Ostrzeżenie: Brak narzędzi do konwersji SVG. Używam sips..."
+        # Ostatnia deska ratunku - użyj sips (zawsze dostępny na macOS)
+        cp "/tmp/bizops-icon.svg" "/tmp/bizops-icon.png"
+    fi
 fi
 
 # Sprawdź czy ikonka została utworzona
