@@ -56,7 +56,16 @@
     "tailwindcss-animate": "^1.0.7",
     "tesseract.js": "^6.0.1",
     "zod": "^3.23.8",
-    "zustand": "^4.5.5"
+    "zustand": "^4.5.5",
+    "openai": "^4.52.0",
+    "axios": "^1.7.2",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.13",
+    "googleapis": "^134.0.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "isomorphic-fetch": "^3.0.0",
+    "simple-statistics": "^7.8.3",
+    "regression": "^2.0.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",
@@ -67,6 +76,8 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/nodemailer": "^6.4.15",
+    "@types/node-cron": "^3.0.11",
     "@vitejs/plugin-react": "^4.3.2",
     "eslint": "^8",
     "eslint-config-next": "14.2.15",
