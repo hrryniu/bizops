@@ -156,6 +156,101 @@ async function main() {
 
   console.log('✅ Tax events generated')
 
+  // Przykładowe stałe wydatki
+  const fixedExpenses = [
+    {
+      name: 'ZUS - składki',
+      amount: 1500.00,
+      dueDay: 20,
+      category: 'ZUS',
+      recurrence: 'monthly',
+      notes: 'Składki ZUS za bieżący miesiąc',
+    },
+    {
+      name: 'Czynsz biura',
+      amount: 2500.00,
+      dueDay: 5,
+      category: 'Czynsz',
+      recurrence: 'monthly',
+      notes: 'Czynsz za lokal przy ul. Przykładowej 10',
+    },
+    {
+      name: 'Prąd',
+      amount: 350.00,
+      dueDay: 15,
+      category: 'Media',
+      recurrence: 'monthly',
+      notes: 'Energia elektryczna',
+    },
+    {
+      name: 'Internet i telefon',
+      amount: 200.00,
+      dueDay: 10,
+      category: 'Media',
+      recurrence: 'monthly',
+      notes: 'Abonament biznesowy',
+    },
+    {
+      name: 'Oprogramowanie księgowe',
+      amount: 99.00,
+      dueDay: 1,
+      category: 'Abonamenty',
+      recurrence: 'monthly',
+      notes: 'Subskrypcja roczna płatna miesięcznie',
+    },
+    {
+      name: 'Ubezpieczenie OC',
+      amount: 450.00,
+      dueDay: 25,
+      category: 'Ubezpieczenia',
+      recurrence: 'quarterly',
+      notes: 'Ubezpieczenie OC działalności gospodarczej - płatne kwartalnie',
+    },
+    {
+      name: 'Zaliczka PIT',
+      amount: 800.00,
+      dueDay: 20,
+      category: 'Podatki',
+      recurrence: 'monthly',
+      notes: 'Zaliczka na podatek dochodowy',
+    },
+    {
+      name: 'Hosting serwerów',
+      amount: 150.00,
+      dueDay: 1,
+      category: 'Abonamenty',
+      recurrence: 'monthly',
+      notes: 'AWS/Azure hosting',
+    },
+    {
+      name: 'Rewizja księgowa',
+      amount: 1200.00,
+      dueDay: 15,
+      category: 'Inne',
+      recurrence: 'yearly',
+      notes: 'Roczna kontrola ksiąg rachunkowych',
+    },
+  ]
+
+  for (const expense of fixedExpenses) {
+    await prisma.fixedExpense.upsert({
+      where: {
+        // Używamy złożonego unikalnego identyfikatora (userId + name)
+        // ale Prisma wymaga unique constraint, więc używamy create/update logic
+        id: `seed-${expense.name.toLowerCase().replace(/\s+/g, '-')}`,
+      },
+      update: expense,
+      create: {
+        ...expense,
+        userId: user.id,
+        isActive: true,
+        syncWithCalendar: false,
+      },
+    })
+  }
+
+  console.log('✅ Fixed expenses created')
+
   console.log('🎉 Seeding complete!')
 }
 

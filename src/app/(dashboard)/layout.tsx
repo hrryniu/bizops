@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { Sidebar } from '@/components/layout/sidebar'
 import { AppearanceProvider } from '@/components/providers/appearance-provider'
 import { LanguageProvider } from '@/components/providers/language-provider'
+import { ExchangeRateProvider } from '@/components/providers/exchange-rate-provider'
 import { LanguageSelector } from '@/components/layout/language-selector'
 
 export default async function DashboardLayout({
@@ -32,17 +33,19 @@ export default async function DashboardLayout({
           layout: (settings?.layout as any) || 'comfortable',
         }}
       >
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto bg-background">
-            <div className="border-b bg-card">
-              <div className="container mx-auto p-4 flex justify-end">
-                <LanguageSelector />
+        <ExchangeRateProvider>
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar />
+            <main className="flex-1 overflow-y-auto bg-background">
+              <div className="border-b bg-card">
+                <div className="container mx-auto p-4 flex justify-end">
+                  <LanguageSelector />
+                </div>
               </div>
-            </div>
-            <div className="container mx-auto p-6">{children}</div>
-          </main>
-        </div>
+              <div className="container mx-auto p-6">{children}</div>
+            </main>
+          </div>
+        </ExchangeRateProvider>
       </AppearanceProvider>
     </LanguageProvider>
   )

@@ -3,12 +3,13 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileText, Receipt, Calendar as CalendarIcon, AlertCircle } from 'lucide-react'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatCurrencyWithConversion, formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Charts } from '@/components/dashboard/charts'
 import { t } from '@/lib/i18n'
 import { EditableDashboard } from '@/components/dashboard/editable-dashboard'
+import { FixedExpensesWidget } from '@/components/dashboard/fixed-expenses-widget'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -23,7 +24,7 @@ export default async function DashboardPage() {
   const locale = settings?.locale ?? 'pl-PL'
 
   // Pobierz statystyki
-  const [invoices, expenses, upcomingTaxEvents] = await Promise.all([
+  const [invoices, expenses, upcomingTaxEvents, fixedExpenses] = await Promise.all([
     prisma.invoice.findMany({
       where: { userId },
       take: 5,
@@ -53,16 +54,34 @@ export default async function DashboardPage() {
       take: 5,
       orderBy: { dueDate: 'asc' },
     }),
+    prisma.fixedExpense.findMany({
+      where: {
+        userId,
+        isActive: true,
+      },
+      orderBy: { dueDay: 'asc' },
+    }),
   ])
 
   // Oblicz podsumowania
   const totalInvoices = await prisma.invoice.count({ where: { userId } })
   const totalExpenses = await prisma.expense.count({ where: { userId } })
 
-  const invoicesSum = await prisma.invoice.aggregate({
+  // Calculate total revenue with currency conversion
+  const allInvoices = await prisma.invoice.findMany({
     where: { userId, status: { in: ['ISSUED', 'PAID'] } },
-    _sum: { totalGross: true },
+    select: { totalGross: true, currency: true },
   })
+  
+  const totalRevenue = allInvoices.reduce((sum, inv) => {
+    const amount = Number(inv.totalGross)
+    if (inv.currency === 'PLN') {
+      return sum + amount
+    }
+    // Convert to PLN using sync fallback rates
+    const rate = inv.currency === 'EUR' ? 4.30 : inv.currency === 'USD' ? 4.00 : inv.currency === 'GBP' ? 5.10 : 1
+    return sum + (amount * rate)
+  }, 0)
 
   const expensesSum = await prisma.expense.aggregate({
     where: { 
@@ -72,7 +91,6 @@ export default async function DashboardPage() {
     _sum: { grossAmount: true },
   })
 
-  const totalRevenue = Number(invoicesSum._sum.totalGross || 0)
   const totalCosts = Number(expensesSum._sum.grossAmount || 0)
 
   // Pobierz dane dla wykresów
@@ -92,6 +110,7 @@ export default async function DashboardPage() {
         issueDate: true,
         totalGross: true,
         totalVat: true,
+        currency: true,
       },
     }),
     prisma.expense.findMany({
@@ -161,7 +180,14 @@ export default async function DashboardPage() {
       exp.date.toISOString().slice(0, 7) === monthKey
     )
     
-    const revenue = monthInvoices.reduce((sum, inv) => sum + Number(inv.totalGross || 0), 0)
+    // Calculate revenue with currency conversion
+    const revenue = monthInvoices.reduce((sum, inv) => {
+      const amount = Number(inv.totalGross || 0)
+      if (inv.currency === 'PLN') return sum + amount
+      const rate = inv.currency === 'EUR' ? 4.30 : inv.currency === 'USD' ? 4.00 : inv.currency === 'GBP' ? 5.10 : 1
+      return sum + (amount * rate)
+    }, 0)
+    
     const costs = monthExpenses.reduce((sum, exp) => sum + Number(exp.grossAmount || 0), 0)
     
     monthlyData.push({
@@ -233,47 +259,8 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nadchodzące terminy</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{upcomingTaxEvents.length}</div>
-            <p className="text-xs text-muted-foreground">Oczekujące zdarzenia</p>
-          </CardContent>
-        </Card>
+        <FixedExpensesWidget expenses={fixedExpenses} />
       </div>
-
-      {/* Nadchodzące terminy podatkowe */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Nadchodzące terminy podatkowe</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {upcomingTaxEvents.length > 0 ? (
-            <div className="space-y-3">
-              {upcomingTaxEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
-                >
-                  <div>
-                    <div className="font-medium">{event.title}</div>
-                    <div className="text-sm text-muted-foreground">{event.description}</div>
-                  </div>
-                  <Badge variant="outline">{formatDate(event.dueDate)}</Badge>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">Brak nadchodzących terminów</p>
-          )}
-          <Link href="/calendar" className="mt-4 block text-sm text-primary hover:underline">
-            Zobacz wszystkie terminy →
-          </Link>
-        </CardContent>
-      </Card>
 
       {/* Ostatnie faktury */}
       <div className="grid gap-4 md:grid-cols-2">
@@ -296,7 +283,7 @@ export default async function DashboardPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium">{formatCurrency(invoice.totalGross)}</div>
+                      <div className="font-medium">{formatCurrencyWithConversion(Number(invoice.totalGross), invoice.currency)}</div>
                       <Badge variant={invoice.status === 'PAID' ? 'default' : 'outline'}>
                         {t(`invoiceStatus.${invoice.status}`, locale)}
                       </Badge>
@@ -350,6 +337,36 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Nadchodzące terminy płatności */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Nadchodzące terminy płatności</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {upcomingTaxEvents.length > 0 ? (
+            <div className="space-y-3">
+              {upcomingTaxEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
+                >
+                  <div>
+                    <div className="font-medium">{event.title}</div>
+                    <div className="text-sm text-muted-foreground">{event.description}</div>
+                  </div>
+                  <Badge variant="outline">{formatDate(event.dueDate)}</Badge>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Brak nadchodzących terminów</p>
+          )}
+          <Link href="/calendar" className="mt-4 block text-sm text-primary hover:underline">
+            Zobacz wszystkie terminy →
+          </Link>
+        </CardContent>
+      </Card>
 
       {/* Wykresy */}
       <Charts 

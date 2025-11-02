@@ -23,6 +23,7 @@ export default async function InvoicesPage() {
     totalNet: Number(invoice.totalNet),
     totalVat: Number(invoice.totalVat),
     totalGross: Number(invoice.totalGross),
+    currency: invoice.currency,
     buyerPrivatePerson: invoice.buyerPrivatePerson,
   }))
 

@@ -66,3 +66,12 @@ Po zaktualizowaniu ikony:
 - Sprawdź w Dock czy ikona się zmieniła
 
 
+
+
+
+
+
+
+
+
+

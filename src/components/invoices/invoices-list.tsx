@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatCurrencyWithConversion, formatDate } from '@/lib/utils'
 import { Eye, Download, Trash2, FileText } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { InvoiceStatusChanger } from './invoice-status-changer'
@@ -23,6 +23,7 @@ type Invoice = {
   issueDate: Date
   totalGross: number
   status: string
+  currency: string
   buyer: { name: string } | null
   buyerPrivatePerson: string | null
 }
@@ -120,7 +121,7 @@ export function InvoicesList({ invoices }: { invoices: Invoice[] }) {
                     </Badge>
                   </TableCell>
                   <TableCell>{formatDate(invoice.issueDate)}</TableCell>
-                  <TableCell>{formatCurrency(invoice.totalGross)}</TableCell>
+                  <TableCell>{formatCurrencyWithConversion(invoice.totalGross, invoice.currency)}</TableCell>
                   <TableCell>
                     <InvoiceStatusChanger 
                       invoiceId={invoice.id}

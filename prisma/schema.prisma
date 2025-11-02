@@ -438,6 +438,30 @@ model CalendarIntegration {
 }
 
 // ========================================
+// 💰 Fixed Expenses Models
+// ========================================
+
+model FixedExpense {
+  id                  String    @id @default(cuid())
+  userId              String
+  name                String    // np. "ZUS", "PIT", "Czynsz", "Prąd"
+  amount              Decimal   @default(0)
+  dueDay              Int       // Dzień miesiąca (1-31)
+  category            String    // "Podatki", "Media", "Abonamenty", "Inne"
+  recurrence          String    @default("monthly") // monthly, quarterly, yearly
+  isActive            Boolean   @default(true)
+  syncWithCalendar    Boolean   @default(false)
+  calendarEventId     String?   // ID wydarzenia w kalendarzu zewnętrznym
+  notes               String?
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([userId, isActive])
+  @@index([dueDay])
+}
+
+// ========================================
 // Update User model with new relations
 // ========================================
 
@@ -462,6 +486,19 @@ model User {
   aiInsights            AIInsight[]
   notifications         Notification[]
   calendarIntegrations  CalendarIntegration[]
+  fixedExpenses         FixedExpense[]
+}
+
+model ExchangeRate {
+  id            String   @id @default(cuid())
+  currency      String   // EUR, USD, GBP, etc.
+  rate          Decimal  // Exchange rate to PLN
+  effectiveDate DateTime // Date when this rate was effective (from NBP)
+  fetchedAt     DateTime @default(now()) // When we fetched this rate
+  createdAt     DateTime @default(now())
+
+  @@index([currency, fetchedAt])
+  @@index([effectiveDate])
 }
 
 // Enums removed - using String fields for SQLite compatibility

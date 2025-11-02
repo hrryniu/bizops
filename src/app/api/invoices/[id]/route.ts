@@ -70,6 +70,11 @@ const updateInvoiceSchema = z.object({
   totalGross: z.string().or(z.number()),
 })
 
+// Schema for status-only update
+const statusUpdateSchema = z.object({
+  status: z.enum(['DRAFT', 'ISSUED', 'PAID', 'CORRECTED', 'CANCELED'])
+})
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -96,7 +101,31 @@ export async function PATCH(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Only allow editing DRAFT invoices
+    const body = await request.json()
+    
+    // Check if this is a status-only update
+    const isStatusUpdate = body.status && Object.keys(body).length === 1
+    
+    if (isStatusUpdate) {
+      // Validate status update
+      const statusData = statusUpdateSchema.parse(body)
+      
+      // Update only the status
+      const updatedInvoice = await prisma.invoice.update({
+        where: { id: params.id },
+        data: {
+          status: statusData.status
+        },
+        include: {
+          items: true,
+          buyer: true
+        }
+      })
+      
+      return NextResponse.json(updatedInvoice)
+    }
+    
+    // Full invoice update - only allow for DRAFT invoices
     if (existingInvoice.status !== 'DRAFT') {
       return NextResponse.json(
         { error: 'Only draft invoices can be edited' },
@@ -104,7 +133,6 @@ export async function PATCH(
       )
     }
 
-    const body = await request.json()
     const data = updateInvoiceSchema.parse(body)
 
     // Update invoice in transaction

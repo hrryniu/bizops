@@ -174,17 +174,43 @@ type InvoiceWithDetails = {
 
 export async function generateInvoicePDF(invoice: InvoiceWithDetails) {
   const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib')
+  const fontkit = await import('@pdf-lib/fontkit')
   const fs = await import('fs')
   const path = await import('path')
+  const https = await import('https')
   
   // Create a new PDF document
   const pdfDoc = await PDFDocument.create()
+  
+  // Register fontkit to support custom fonts
+  pdfDoc.registerFontkit(fontkit.default)
+  
   const page = pdfDoc.addPage([595.28, 841.89]) // A4 size
   
   const { width, height } = page.getSize()
   
-  // Load font that supports UTF-8
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+  // Load font that supports Polish characters (UTF-8)
+  let font
+  try {
+    // Try to load Roboto font from CDN (supports Polish characters)
+    const fontUrl = 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5WZLCzYlKw.ttf'
+    
+    const fontBytes = await new Promise<Buffer>((resolve, reject) => {
+      https.get(fontUrl, (response) => {
+        const chunks: Buffer[] = []
+        response.on('data', (chunk) => chunks.push(chunk))
+        response.on('end', () => resolve(Buffer.concat(chunks)))
+        response.on('error', reject)
+      }).on('error', reject)
+    })
+    
+    font = await pdfDoc.embedFont(fontBytes)
+    console.log('[PDF Generator] Loaded Roboto font with Polish characters support')
+  } catch (error) {
+    console.warn('[PDF Generator] Failed to load Roboto font, falling back to Helvetica:', error)
+    // Fallback to Helvetica if font loading fails
+    font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+  }
   
   // Get settings
   const settings = invoice.user.settings
@@ -264,21 +290,15 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails) {
   
   // Helper function to add text with proper encoding
   const addText = (text: string, x: number, y: number, options: any = {}) => {
-    // Replace Polish characters with ASCII equivalents for compatibility and remove newlines
-    const asciiText = text
+    // Clean up text (remove extra whitespace and newlines, but keep Polish characters)
+    const cleanText = text
       .replace(/\n/g, ' ')  // Replace newlines with spaces
       .replace(/\r/g, ' ')  // Replace carriage returns with spaces
       .replace(/\t/g, ' ')  // Replace tabs with spaces
-      .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l')
-      .replace(/ń/g, 'n').replace(/ó/g, 'o').replace(/ś/g, 's').replace(/ź/g, 'z')
-      .replace(/ż/g, 'z')
-      .replace(/Ą/g, 'A').replace(/Ć/g, 'C').replace(/Ę/g, 'E').replace(/Ł/g, 'L')
-      .replace(/Ń/g, 'N').replace(/Ó/g, 'O').replace(/Ś/g, 'S').replace(/Ź/g, 'Z')
-      .replace(/Ż/g, 'Z')
       .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
       .trim()
     
-    page.drawText(asciiText, {
+    page.drawText(cleanText, {
       x,
       y: height - y,
       size: options.size || 10,
@@ -290,21 +310,15 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails) {
   
   // Helper function to wrap text to multiple lines
   const wrapText = (text: string, maxWidth: number, fontSize: number = 10): string[] => {
-    // Convert to ASCII first and remove newlines (same as addText function)
-    const asciiText = text
+    // Clean up text but keep Polish characters
+    const cleanText = text
       .replace(/\n/g, ' ')  // Replace newlines with spaces
       .replace(/\r/g, ' ')  // Replace carriage returns with spaces
       .replace(/\t/g, ' ')  // Replace tabs with spaces
-      .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l')
-      .replace(/ń/g, 'n').replace(/ó/g, 'o').replace(/ś/g, 's').replace(/ź/g, 'z')
-      .replace(/ż/g, 'z')
-      .replace(/Ą/g, 'A').replace(/Ć/g, 'C').replace(/Ę/g, 'E').replace(/Ł/g, 'L')
-      .replace(/Ń/g, 'N').replace(/Ó/g, 'O').replace(/Ś/g, 'S').replace(/Ź/g, 'Z')
-      .replace(/Ż/g, 'Z')
       .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
       .trim()
     
-    const words = asciiText.split(' ')
+    const words = cleanText.split(' ')
     const lines: string[] = []
     let currentLine = ''
     
@@ -399,11 +413,11 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   sellerY += 18
   
   if (settings) {
-    addWrappedText(settings.companyName || 'Nazwa firmy', 50, sellerY, 220, { size: 10, color: rgb(0, 0, 0) })
-    sellerY += 16
+    const companyNameHeight = addWrappedText(settings.companyName || 'Nazwa firmy', 50, sellerY, 220, { size: 10, color: rgb(0, 0, 0) })
+    sellerY += companyNameHeight + 5
     if (settings.companyAddress) {
       const addressHeight = addWrappedText(settings.companyAddress, 50, sellerY, 220, { size: 9 })
-      sellerY += addressHeight + 3
+      sellerY += addressHeight + 5
     }
     if (settings.companyNIP) {
       addText(`NIP: ${settings.companyNIP}`, 50, sellerY, { size: 9 })
@@ -428,7 +442,7 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   
   if (invoice.saleDate) {
     dateY += 18
-    addText(`Data zakonczenia dostawy/uslugi:`, invoiceTitleX - 30, dateY, { size: 8, color: rgb(0.3, 0.3, 0.3) })
+    addText(`Data zakończenia dostawy/usługi:`, invoiceTitleX - 30, dateY, { size: 8, color: rgb(0.3, 0.3, 0.3) })
     dateY += 14
     addText(formatDate(invoice.saleDate), invoiceTitleX - 30, dateY, { size: 9 })
   }
@@ -440,15 +454,15 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   buyerY += 18
   
   if (invoice.buyerPrivatePerson) {
-    addWrappedText(invoice.buyerPrivatePerson, invoiceTitleX - 30, buyerY, 200, { size: 10, color: rgb(0, 0, 0) })
-    buyerY += 16
+    const personHeight = addWrappedText(invoice.buyerPrivatePerson, invoiceTitleX - 30, buyerY, 200, { size: 10, color: rgb(0, 0, 0) })
+    buyerY += personHeight + 5
     addText('Osoba prywatna', invoiceTitleX - 30, buyerY, { size: 9, color: rgb(0.4, 0.4, 0.4) })
   } else if (invoice.buyer) {
-    addWrappedText(invoice.buyer.name, invoiceTitleX - 30, buyerY, 200, { size: 10, color: rgb(0, 0, 0) })
-    buyerY += 16
+    const nameHeight = addWrappedText(invoice.buyer.name, invoiceTitleX - 30, buyerY, 200, { size: 10, color: rgb(0, 0, 0) })
+    buyerY += nameHeight + 5
     if (invoice.buyer.address) {
       const addressHeight = addWrappedText(invoice.buyer.address, invoiceTitleX - 30, buyerY, 200, { size: 9 })
-      buyerY += addressHeight + 3
+      buyerY += addressHeight + 5
     }
     if (invoice.buyer.nip) {
       addText(`NIP: ${invoice.buyer.nip}`, invoiceTitleX - 30, buyerY, { size: 9 })
@@ -456,15 +470,8 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
     }
   }
   
-  // === SECTION 6: PAYMENT METHOD (Left Side) ===
-  const paymentY = sellerY + 20
-  if (invoice.paymentMethod) {
-    addText('Sposob zaplaty:', 50, paymentY, { size: 9, color: rgb(0.3, 0.3, 0.3) })
-    addText(invoice.paymentMethod, 50, paymentY + 14, { size: 10, color: rgb(0, 0, 0) })
-  }
-  
   // === SECTION 7: ITEMS TABLE ===
-  const tableStartY = Math.max(buyerY, paymentY) + 40
+  const tableStartY = Math.max(buyerY, sellerY) + 40
   
   // Table header with 9 columns - adjusted to prevent overlap
   const col1X = 50   // Lp.
@@ -485,11 +492,11 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   // Header text
   let headerY = tableStartY + 12
   addText('Lp.', col1X + 5, headerY, { size: 7.5, color: rgb(0, 0, 0) })
-  addText('Nazwa towaru lub uslugi', col2X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
+  addText('Nazwa towaru lub usługi', col2X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
   addText('J.m.', col3X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
-  addText('Ilosc', col4X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
+  addText('Ilość', col4X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
   addText('Cena netto', col5X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
-  addText('Wartosc netto', col6X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
+  addText('Wartość netto', col6X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
   addText('VAT %', col7X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
   addText('Kwota VAT', col8X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
   addText('Brutto', col9X, headerY, { size: 7.5, color: rgb(0, 0, 0) })
@@ -497,11 +504,12 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   // Table rows
   let currentRowY = tableStartY + 32
   invoice.items.forEach((item: any, index: number) => {
-    const rowHeight = 16
-    
     // Row data
     addText((index + 1).toString(), col1X + 5, currentRowY, { size: 9 })
-    addWrappedText(item.name, col2X, currentRowY, 160, { size: 9 })
+    
+    // Calculate height needed for wrapped item name
+    const itemNameHeight = addWrappedText(item.name, col2X, currentRowY, 160, { size: 9 })
+    
     addText(item.unit || 'szt.', col3X, currentRowY, { size: 9 })
     addText(item.quantity.toString(), col4X, currentRowY, { size: 9 })
     addText(parseFloat(item.netPrice).toFixed(2), col5X, currentRowY, { size: 9 })
@@ -510,8 +518,14 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
     addText(parseFloat(item.lineVat).toFixed(2), col8X, currentRowY, { size: 9 })
     addText(parseFloat(item.lineGross).toFixed(2), col9X, currentRowY, { size: 9 })
     
+    // Use the actual height needed for the row (minimum 18px, or more if text wrapped)
+    const rowHeight = Math.max(18, itemNameHeight + 6)
     currentRowY += rowHeight
-    addLine(col1X, currentRowY - 2, width - 50, currentRowY - 2, 0.5, rgb(0.7, 0.7, 0.7))
+    
+    // Draw separator line between rows (not after the last row)
+    if (index < invoice.items.length - 1) {
+      addLine(col1X, currentRowY + 2, width - 50, currentRowY + 2, 0.5, rgb(0.7, 0.7, 0.7))
+    }
   })
   
   // === SECTION 8: TOTALS ===
@@ -523,28 +537,58 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   addText(parseFloat(invoice.totalVat).toFixed(2), col8X, totalsY, { size: 10, color: rgb(0, 0, 0) })
   addText(parseFloat(invoice.totalGross).toFixed(2), col9X, totalsY, { size: 10, color: rgb(0, 0, 0) })
   
-  // VAT breakdown row (W tym)
-  const breakdownY = totalsY + 18
-  addText('W tym', col2X, breakdownY, { size: 9, color: rgb(0.3, 0.3, 0.3) })
-  addText(parseFloat(invoice.totalNet).toFixed(2), col6X, breakdownY, { size: 9 })
-  // Assuming all items have 23% VAT for simplicity
-  addText('23%', col7X, breakdownY, { size: 9 })
-  addText(parseFloat(invoice.totalVat).toFixed(2), col8X, breakdownY, { size: 9 })
-  addText(parseFloat(invoice.totalGross).toFixed(2), col9X, breakdownY, { size: 9 })
-  
   // === SECTION 9: TOTAL AMOUNT DUE ===
-  const amountDueY = breakdownY + 30
-  addText('Razem do zaplaty:', 50, amountDueY, { size: 12, color: rgb(0, 0, 0) })
+  const amountDueY = totalsY + 30
+  addText('Razem do zapłaty:', 50, amountDueY, { size: 12, color: rgb(0, 0, 0) })
   addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, 180, amountDueY, { size: 14, color: rgb(0, 0, 0) })
   
   // Amount in words (słownie)
   const amountInWordsY = amountDueY + 20
-  addText('Slownie zlotych:', 50, amountInWordsY, { size: 9, color: rgb(0.3, 0.3, 0.3) })
+  addText('Słownie złotych:', 50, amountInWordsY, { size: 9, color: rgb(0.3, 0.3, 0.3) })
   // Simple conversion - można ulepszyć
   addText(`(${parseFloat(invoice.totalGross).toFixed(2)} PLN)`, 50, amountInWordsY + 14, { size: 9 })
   
+  // === PAYMENT METHOD (after amount) ===
+  const paymentMethodY = amountInWordsY + 35
+  if (invoice.paymentMethod) {
+    addText(`Sposób zapłaty: ${invoice.paymentMethod}`, 50, paymentMethodY, { size: 10, color: rgb(0, 0, 0) })
+  }
+  
+  // === BANK ACCOUNT NUMBER ===
+  let bankAccountY = paymentMethodY + 18
+  let bankAccountNumber = null
+  
+  // Try to get bank account from selectedBankAccount or from settings
+  if (invoice.selectedBankAccount) {
+    // Parse bank accounts from settings
+    try {
+      const bankAccounts = settings?.bankAccounts ? JSON.parse(settings.bankAccounts) : []
+      const selectedAccount = bankAccounts.find((acc: any) => acc.name === invoice.selectedBankAccount)
+      if (selectedAccount) {
+        bankAccountNumber = selectedAccount.accountNumber
+      }
+    } catch (e) {
+      // If parsing fails, try companyBankAccount
+      bankAccountNumber = settings?.companyBankAccount
+    }
+  } else {
+    // Fallback to companyBankAccount from settings
+    bankAccountNumber = settings?.companyBankAccount
+  }
+  
+  if (bankAccountNumber) {
+    addText(`Numer konta: ${bankAccountNumber}`, 50, bankAccountY, { size: 10, color: rgb(0, 0, 0) })
+    bankAccountY += 18
+  }
+  
+  // === DUE DATE (TERMIN PŁATNOŚCI) ===
+  if (invoice.dueDate) {
+    addText(`Termin płatności: ${formatDate(invoice.dueDate)}`, 50, bankAccountY, { size: 10, color: rgb(0, 0, 0) })
+    bankAccountY += 18
+  }
+  
   // === SECTION 10: NOTES ===
-  const notesY = amountInWordsY + 40
+  const notesY = bankAccountY + 10
   if (invoice.notes) {
     // Remove duplicate phrases from notes
     const cleanNotes = (() => {
@@ -589,9 +633,9 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   addLine(50, signatureY, 200, signatureY, 1, rgb(0.5, 0.5, 0.5))
   addLine(width - 250, signatureY, width - 50, signatureY, 1, rgb(0.5, 0.5, 0.5))
   
-  addText('podpis osoby upowaznionej', 50, signatureY + 10, { size: 7, color: rgb(0.4, 0.4, 0.4) })
+  addText('podpis osoby upoważnionej', 50, signatureY + 10, { size: 7, color: rgb(0.4, 0.4, 0.4) })
   addText('do odbioru faktury', 50, signatureY + 18, { size: 7, color: rgb(0.4, 0.4, 0.4) })
   
-  addText('podpis osoby upowaznionej', width - 250, signatureY + 10, { size: 7, color: rgb(0.4, 0.4, 0.4) })
+  addText('podpis osoby upoważnionej', width - 250, signatureY + 10, { size: 7, color: rgb(0.4, 0.4, 0.4) })
   addText('do wystawienia faktury', width - 250, signatureY + 18, { size: 7, color: rgb(0.4, 0.4, 0.4) })
 }

@@ -59,7 +59,7 @@ cat > "$APP_DIR/Contents/MacOS/BizOps" << EOF
 # BizOps macOS App Launcher
 SCRIPT_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
 # Bezpośrednia ścieżka do katalogu projektu
-PROJECT_DIR="$SCRIPT_DIR/bizops"
+PROJECT_DIR="/Users/hrrniu/Desktop/JIMBO MEDIA/Program/bizops"
 
 echo "🚀 Uruchamianie BizOps..."
 
@@ -67,13 +67,13 @@ echo "🚀 Uruchamianie BizOps..."
 export PATH="/opt/homebrew/bin:/usr/local/bin:\$PATH"
 
 # Sprawdź czy katalog projektu istnieje
-if [ ! -d "$PROJECT_DIR" ]; then
+if [ ! -d "\$PROJECT_DIR" ]; then
     osascript -e 'display dialog "Nie można znaleźć katalogu BizOps. Upewnij się, że aplikacja została zainstalowana poprawnie." buttons {"OK"} default button "OK" with icon stop'
     exit 1
 fi
 
 # Przejdź do katalogu projektu
-cd "$PROJECT_DIR"
+cd "\$PROJECT_DIR"
 
 # Sprawdź czy Node.js jest zainstalowany
 if ! command -v node &> /dev/null; then
@@ -99,6 +99,10 @@ if [ ! -f "prisma/dev.db" ]; then
     npx prisma generate
     npx prisma db push
 fi
+
+# Wyczyść cache Next.js (zapobiega błędom webpack)
+echo "🧹 Czyszczenie cache..."
+rm -rf .next
 
 # Uruchom aplikację
 echo "🔧 Uruchamianie serwera deweloperskiego..."

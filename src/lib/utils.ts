@@ -6,12 +6,40 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Format currency (PLN)
-export function formatCurrency(amount: number | string): string {
+export function formatCurrency(amount: number | string, currency: string = 'PLN'): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount
   return new Intl.NumberFormat('pl-PL', {
     style: 'currency',
-    currency: 'PLN',
+    currency: currency,
   }).format(num)
+}
+
+// Convert currency to PLN synchronously using cached rates (fallback)
+export function convertToPLNSync(amount: number, fromCurrency: string): number {
+  if (fromCurrency === 'PLN') return amount
+  
+  // Fallback exchange rates if API is unavailable
+  const exchangeRates: Record<string, number> = {
+    'EUR': 4.30, // 1 EUR ≈ 4.30 PLN
+    'USD': 4.00, // 1 USD ≈ 4.00 PLN
+    'GBP': 5.10, // 1 GBP ≈ 5.10 PLN
+  }
+  
+  const rate = exchangeRates[fromCurrency] || 1
+  return amount * rate
+}
+
+// Format amount with currency conversion info (synchronous version)
+export function formatCurrencyWithConversion(amount: number, currency: string): string {
+  if (currency === 'PLN') {
+    return formatCurrency(amount, 'PLN')
+  }
+  
+  const plnAmount = convertToPLNSync(amount, currency)
+  const originalFormatted = formatCurrency(amount, currency)
+  const plnFormatted = formatCurrency(plnAmount, 'PLN')
+  
+  return `${plnFormatted} (${originalFormatted})`
 }
 
 // Parse string to number

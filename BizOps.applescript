@@ -3,5 +3,5 @@
 
 tell application "Terminal"
     activate
-    do script "cd '/Users/hrrniu/Desktop/JIMBO MEDIA/Program/bizops' && ./start.sh"
+    do script "cd '/Users/hrrniu/Desktop/JIMBO MEDIA/Program/bizops' && ./launch-bizops.sh"
 end tell
