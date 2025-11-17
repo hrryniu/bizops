@@ -166,14 +166,14 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
                   <div>
                     <p className="font-medium">{item.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {item.quantity.toString()} {item.unit} × {formatCurrency(item.netPrice)} | VAT{' '}
+                      {item.quantity.toString()} {item.unit} × {formatCurrency(item.netPrice, invoice.currency)} | VAT{' '}
                       {item.vatRate}%
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{formatCurrency(item.lineGross)}</p>
+                    <p className="font-medium">{formatCurrency(item.lineGross, invoice.currency)}</p>
                     <p className="text-sm text-muted-foreground">
-                      Netto: {formatCurrency(item.lineNet)}
+                      Netto: {formatCurrency(item.lineNet, invoice.currency)}
                     </p>
                   </div>
                 </div>
@@ -183,15 +183,15 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
           <div className="mt-6 space-y-2 border-t pt-4">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Netto:</span>
-              <span>{formatCurrency(invoice.totalNet)}</span>
+              <span>{formatCurrency(invoice.totalNet, invoice.currency)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">VAT:</span>
-              <span>{formatCurrency(invoice.totalVat)}</span>
+              <span>{formatCurrency(invoice.totalVat, invoice.currency)}</span>
             </div>
             <div className="flex justify-between text-lg font-bold">
               <span>Brutto:</span>
-              <span>{formatCurrency(invoice.totalGross)}</span>
+              <span>{formatCurrency(invoice.totalGross, invoice.currency)}</span>
             </div>
           </div>
         </CardContent>

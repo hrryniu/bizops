@@ -22,6 +22,7 @@ export default async function ContractorDetailPage({ params }: { params: { id: s
           number: true,
           issueDate: true,
           totalGross: true,
+          currency: true,
           status: true,
         },
         orderBy: { issueDate: 'desc' },
@@ -146,7 +147,7 @@ export default async function ContractorDetailPage({ params }: { params: { id: s
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium">{formatCurrency(invoice.totalGross)}</div>
+                    <div className="font-medium">{formatCurrency(invoice.totalGross, invoice.currency)}</div>
                     <Badge variant={invoice.status === 'PAID' ? 'default' : 'outline'}>
                       {invoice.status}
                     </Badge>

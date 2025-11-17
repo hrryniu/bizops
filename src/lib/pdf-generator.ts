@@ -531,22 +531,22 @@ function generateInvoiceTemplate(page: any, invoice: any, settings: any, helpers
   // === SECTION 8: TOTALS ===
   const totalsY = currentRowY + 15
   
-  // Total row
+  // Total row - wszystkie kwoty w walucie faktury
   addText('Razem', col2X, totalsY, { size: 10, color: rgb(0, 0, 0) })
-  addText(parseFloat(invoice.totalNet).toFixed(2), col6X, totalsY, { size: 10, color: rgb(0, 0, 0) })
-  addText(parseFloat(invoice.totalVat).toFixed(2), col8X, totalsY, { size: 10, color: rgb(0, 0, 0) })
-  addText(parseFloat(invoice.totalGross).toFixed(2), col9X, totalsY, { size: 10, color: rgb(0, 0, 0) })
+  addText(`${parseFloat(invoice.totalNet).toFixed(2)} ${invoice.currency}`, col6X, totalsY, { size: 10, color: rgb(0, 0, 0) })
+  addText(`${parseFloat(invoice.totalVat).toFixed(2)} ${invoice.currency}`, col8X, totalsY, { size: 10, color: rgb(0, 0, 0) })
+  addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, col9X, totalsY, { size: 10, color: rgb(0, 0, 0) })
   
   // === SECTION 9: TOTAL AMOUNT DUE ===
   const amountDueY = totalsY + 30
   addText('Razem do zapłaty:', 50, amountDueY, { size: 12, color: rgb(0, 0, 0) })
   addText(`${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency}`, 180, amountDueY, { size: 14, color: rgb(0, 0, 0) })
   
-  // Amount in words (słownie)
+  // Amount in words (słownie) - w walucie faktury
   const amountInWordsY = amountDueY + 20
-  addText('Słownie złotych:', 50, amountInWordsY, { size: 9, color: rgb(0.3, 0.3, 0.3) })
-  // Simple conversion - można ulepszyć
-  addText(`(${parseFloat(invoice.totalGross).toFixed(2)} PLN)`, 50, amountInWordsY + 14, { size: 9 })
+  const currencyLabel = invoice.currency === 'PLN' ? 'złotych' : invoice.currency === 'EUR' ? 'euro' : invoice.currency === 'USD' ? 'dolarów' : invoice.currency === 'GBP' ? 'funtów' : 'w walucie faktury'
+  addText(`Słownie ${currencyLabel}:`, 50, amountInWordsY, { size: 9, color: rgb(0.3, 0.3, 0.3) })
+  addText(`(${parseFloat(invoice.totalGross).toFixed(2)} ${invoice.currency})`, 50, amountInWordsY + 14, { size: 9 })
   
   // === PAYMENT METHOD (after amount) ===
   const paymentMethodY = amountInWordsY + 35

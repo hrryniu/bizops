@@ -320,3 +320,4 @@ export function FixedExpensesModal({ open, onClose }: FixedExpensesModalProps) {
 
 
 
+
