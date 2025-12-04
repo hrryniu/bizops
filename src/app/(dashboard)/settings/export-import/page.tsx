@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Download, Upload, FileText, Database, Archive, ArrowLeft } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Link from 'next/link'
+import { BackupSettingsCard } from '@/components/settings/backup-settings'
 
 export default function ExportImportPage() {
   const { toast } = useToast()
@@ -50,6 +51,82 @@ export default function ExportImportPage() {
       })
     } finally {
       setLoading(null)
+    }
+  }
+
+  const handleDatabaseExport = async () => {
+    setLoading('db-export')
+    try {
+      const response = await fetch('/api/db/backup')
+
+      if (!response.ok) {
+        throw new Error()
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      const contentDisposition = response.headers.get('content-disposition')
+      const filename = contentDisposition
+        ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
+        : `bizops-database-backup-${new Date().toISOString().split('T')[0]}.db`
+
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: 'Sukces',
+        description: 'Kopia bazy danych została pobrana',
+      })
+    } catch (error) {
+      toast({
+        title: 'Błąd',
+        description: 'Nie udało się wyeksportować bazy danych',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const handleDatabaseImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setLoading('db-import')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/db/restore', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error()
+      }
+
+      toast({
+        title: 'Sukces',
+        description:
+          'Baza danych została zaimportowana. Aplikacja zostanie odświeżona, aby wczytać nowe dane.',
+      })
+
+      window.location.reload()
+    } catch (error) {
+      toast({
+        title: 'Błąd',
+        description: 'Nie udało się zaimportować bazy danych',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(null)
+      event.target.value = ''
     }
   }
 
@@ -206,6 +283,30 @@ export default function ExportImportPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Database backup */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Kopia bazy danych (SQLite)
+              </CardTitle>
+              <CardDescription>
+                Pobierz surowy plik bazy danych SQLite. Przydatne jako pełna kopia bezpieczeństwa
+                lub do przeniesienia aplikacji na inny komputer.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={handleDatabaseExport}
+                disabled={loading === 'db-export'}
+                className="w-full"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {loading === 'db-export' ? 'Przygotowywanie kopii...' : 'Pobierz plik bazy danych'}
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="import" className="space-y-4">
@@ -251,6 +352,54 @@ export default function ExportImportPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Database restore */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Import bazy danych (SQLite)
+              </CardTitle>
+              <CardDescription>
+                Przywróć całą bazę danych z pliku SQLite (.db). Zastąpi to wszystkie obecne dane w
+                aplikacji.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                <div className="flex flex-col items-center space-y-2">
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                  <div className="text-center">
+                    <label htmlFor="db-import-file" className="cursor-pointer">
+                      <span className="text-sm font-medium text-primary hover:underline">
+                        Kliknij aby wybrać plik bazy danych (.db)
+                      </span>
+                      <input
+                        id="db-import-file"
+                        type="file"
+                        accept=".db,.sqlite"
+                        className="hidden"
+                        onChange={handleDatabaseImport}
+                      />
+                    </label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Zalecane jest wcześniejsze pobranie kopii aktualnej bazy danych.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 className="mb-2 font-medium text-yellow-800">⚠️ Uwaga – operacja krytyczna</h4>
+                <p className="text-sm text-yellow-700">
+                  Import pliku bazy danych zastąpi wszystkie obecne dane (wszystkich użytkowników).
+                  Przed kontynuacją upewnij się, że masz aktualną kopię zapasową.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <BackupSettingsCard />
         </TabsContent>
       </Tabs>
     </div>

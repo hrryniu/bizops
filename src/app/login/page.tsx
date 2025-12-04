@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -80,8 +81,17 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Logowanie...' : 'Zaloguj się'}
             </Button>
-            <div className="text-sm text-muted-foreground text-center mt-4">
-              Testowe konto: admin@bizops.local / admin123
+            <div className="mt-4 space-y-1 text-center text-sm text-muted-foreground">
+              <div>
+                Testowe konto: <span className="font-mono">admin@bizops.local</span> /{' '}
+                <span className="font-mono">admin123</span>
+              </div>
+              <div>
+                Nie masz konta?{' '}
+                <Link href="/register" className="text-primary hover:underline font-medium">
+                  Utwórz nowego użytkownika
+                </Link>
+              </div>
             </div>
           </form>
         </CardContent>
